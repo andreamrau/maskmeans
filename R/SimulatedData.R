@@ -30,7 +30,7 @@
 #' sim_6a <- mvsimulate(type = "D6")
 #' sim_6b <- mvsimulate(type = "D6", delta=7, n=200, K=5, sigma=0.5)
 
-mvsimulate <- function(type = "D6", delta, n, K, sigma) {
+mv_simulate <- function(type = "D6", delta, n, K, sigma) {
   if(type == "D1") {
     sim <- simuD1()
   } else if(type == "D2") {

@@ -6,19 +6,6 @@
 \usage{
 weightcalculate(X, mv, centers, cluster, gamma)
 }
-\arguments{
-\item{X}{Matrix of multi-view data, where the first view corresponds to the 
-principal data used to obtain the partition in \code{cluster.init}}
-
-\item{mv}{Vector corresponding to the size of each data view. The sum of \code{mv} should 
-correspond to the number of columns in \code{X}.}
-
-\item{centers}{Matrix of cluster centers}
-
-\item{cluster}{Vector of cluster assignments}
-
-\item{gamma}{??}
-}
 \description{
 Calculation of multi-view weights for hard clusters
 }

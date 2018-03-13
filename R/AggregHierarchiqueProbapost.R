@@ -8,7 +8,7 @@
 #'
 #' @param probapost.init Matrix of available conditional probabilities of cluster membership
 #' for \code{X}
-#' @inheritParams hmv1
+#' @inheritParams mv_aggregation
 #'
 #' @return
 #' @export
@@ -150,7 +150,7 @@ hmvprobapost <- function(X, mv, gamma, probapost.init)
 
 #' Calculation of multi-view weights for hard clusters
 #'
-#' @inheritParams hmv1
+#' @inheritParams mv_aggregation
 #' @param centers Matrix of cluster centers
 #' @param probapost Matrix of conditional probabilities of cluster membership for \code{X}
 #'
@@ -192,7 +192,7 @@ weightcalculateprobapost <-
 
 #' Calculate the value of criterion 3
 #'
-#' @inheritParams hmv1
+#' @inheritParams mv_aggregation
 #' @param weights Blah blah
 #' @param probapost Blah blah
 #' @param cluster Blah blah

@@ -16,4 +16,5 @@
 #' To be completed ...
 #'
 #' @keywords models cluster
+#' @importFrom stats hclust cutree
 NULL

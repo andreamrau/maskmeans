@@ -13,7 +13,7 @@ principal data used to obtain the partition in \code{cluster.init}}
 \item{mv}{Vector corresponding to the size of each data view. The sum of \code{mv} should 
 correspond to the number of columns in \code{X}.}
 
-\item{gamma}{??}
+\item{gamma}{Parameter that controls the distribution of view weights. Default value is 2.}
 
 \item{weights}{Blah blah}
 

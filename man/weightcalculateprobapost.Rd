@@ -17,7 +17,7 @@ correspond to the number of columns in \code{X}.}
 
 \item{probapost}{Matrix of conditional probabilities of cluster membership for \code{X}}
 
-\item{gamma}{??}
+\item{gamma}{Parameter that controls the distribution of view weights. Default value is 2.}
 }
 \description{
 Calculation of multi-view weights for hard clusters

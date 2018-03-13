@@ -1,18 +1,3 @@
-#' Aggregation of hard clusters based on multi-view input
-#'
-#' @param X Matrix of multi-view data, where the first view corresponds to the 
-#' principal data used to obtain the partition in \code{cluster.init}
-#' @param mv Vector corresponding to the size of each data view. The sum of \code{mv} should 
-#' correspond to the number of columns in \code{X}.
-#' @param gamma ??
-#' @param cluster.init Vector of available cluster labels 
-#' @param weightsopt If \code{TRUE}, run algorithm in weighted multi-view mode; if FALSE, weights are 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-#' @importFrom stats hclust
 hmv1 <- function(X, mv, gamma, cluster.init, weightsopt = TRUE) {
   weights.sauv <- NULL
   Kmax <- max(cluster.init)
@@ -154,15 +139,6 @@ hmv1 <- function(X, mv, gamma, cluster.init, weightsopt = TRUE) {
 }
 
 #' Calculation of multi-view weights for hard clusters
-#'
-#' @inheritParams hmv1
-#' @param centers Matrix of cluster centers
-#' @param cluster Vector of cluster assignments
-#'
-#' @return
-#' @export
-#'
-#' @examples
 weightcalculate <- function(X, mv, centers, cluster, gamma) {
   ref <- c(0, cumsum(mv))
   labcluster <- as.numeric(rownames(centers))
@@ -196,16 +172,7 @@ weightcalculate <- function(X, mv, centers, cluster, gamma) {
   return(list(weights = aux1, weightsmv = weightsmv))
 }
 
-#' Calculate the value of criterion 2
-#'
-#' @inheritParams hmv1
-#' @param weights Blah blah
-#' @param cluster Blah blah
-#'
-#' @return
-#' @export
-#'
-#' @examples
+
 Crit2 <- function(X, mv, gamma, weights, cluster) {
   ref <- c(0, cumsum(mv))
   clustername <- unique(cluster)
@@ -228,19 +195,6 @@ Crit2 <- function(X, mv, gamma, weights, cluster) {
   return(sum(varclass))
 }
 
-
-
-
-#' Title
-#'
-#' @param R ??
-#' @param K ??
-#' @param cluster.init ??
-#'
-#' @return
-#' @export
-#'
-#' @examples
 cutreeNew <- function(R, K, cluster.init) {
   cc <- cutree(R, K)
   classif <- cluster.init
@@ -250,12 +204,3 @@ cutreeNew <- function(R, K, cluster.init) {
 }
 
 
-####  Function de scale et normalisation par la taille des views
-#################
-scaleview<-function(Data,mv){
-  X=scale(Data)
-  ref=cumsum(c(0,mv))
-  for (v in 1:length(mv))
-    X[,seq((ref[v]+1),ref[v+1])] = X[,seq((ref[v]+1),ref[v+1])] / mv[v]
-  return(X)
-}
