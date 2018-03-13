@@ -4,7 +4,8 @@
 \alias{PlotResHMV}
 \title{Title}
 \usage{
-PlotResHMV(Res, dendro = T, heights = T, weights = T, CRIT = T)
+PlotResHMV(Res, dendro = TRUE, heights = TRUE, weights = TRUE,
+  CRIT = TRUE)
 }
 \arguments{
 \item{Res}{}

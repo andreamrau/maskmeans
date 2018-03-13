@@ -2,23 +2,25 @@
 % Please edit documentation in R/AggregHierarchiqueProbapost.R
 \name{Crit3}
 \alias{Crit3}
-\title{Title}
+\title{Calculate the value of criterion 3}
 \usage{
 Crit3(X, mv, gamma, weights, probapost, cluster)
 }
 \arguments{
-\item{X}{}
+\item{X}{Matrix of multi-view data, where the first view corresponds to the 
+principal data used to obtain the partition in \code{cluster.init}}
 
-\item{mv}{}
+\item{mv}{Vector corresponding to the size of each data view. The sum of \code{mv} should 
+correspond to the number of columns in \code{X}.}
 
-\item{gamma}{}
+\item{gamma}{??}
 
-\item{weights}{}
+\item{weights}{Blah blah}
 
-\item{probapost}{}
+\item{probapost}{Blah blah}
 
-\item{cluster}{}
+\item{cluster}{Blah blah}
 }
 \description{
-Title
+Calculate the value of criterion 3
 }

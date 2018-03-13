@@ -4,8 +4,8 @@
 \alias{PlotResSplittingbis}
 \title{Title}
 \usage{
-PlotResSplittingbis(Res, plotCRIT = T, weights_step = F,
-  weights_clust = F)
+PlotResSplittingbis(Res, plotCRIT = TRUE, weights_step = FALSE,
+  weights_clust = FALSE)
 }
 \arguments{
 \item{Res}{}

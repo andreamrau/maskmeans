@@ -248,3 +248,14 @@ cutreeNew <- function(R, K, cluster.init) {
     classif[which(classif == names(cc)[j])] <- cc[j]
   return(classif)
 }
+
+
+####  Function de scale et normalisation par la taille des views
+#################
+scaleview<-function(Data,mv){
+  X=scale(Data)
+  ref=cumsum(c(0,mv))
+  for (v in 1:length(mv))
+    X[,seq((ref[v]+1),ref[v+1])] = X[,seq((ref[v]+1),ref[v+1])] / mv[v]
+  return(X)
+}

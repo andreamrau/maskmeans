@@ -21,3 +21,6 @@ for \code{X}}
 \description{
 Aggregation of fuzzy clusters based on multi-view inputs
 }
+\examples{
+
+}

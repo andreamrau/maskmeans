@@ -7,11 +7,11 @@
 cutreeNewProbapost(R, K, probapost.init)
 }
 \arguments{
-\item{R}{}
+\item{R}{??}
 
-\item{K}{}
+\item{K}{??}
 
-\item{probapost.init}{}
+\item{probapost.init}{??}
 }
 \description{
 Title

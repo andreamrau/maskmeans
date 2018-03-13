@@ -2,7 +2,7 @@
 % Please edit documentation in R/AggregHierarchique.R
 \name{Crit2}
 \alias{Crit2}
-\title{Calculate the value of the criterion}
+\title{Calculate the value of criterion 2}
 \usage{
 Crit2(X, mv, gamma, weights, cluster)
 }
@@ -20,5 +20,5 @@ correspond to the number of columns in \code{X}.}
 \item{cluster}{Blah blah}
 }
 \description{
-Calculate the value of the criterion
+Calculate the value of criterion 2
 }
