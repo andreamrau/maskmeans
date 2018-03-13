@@ -1,3 +1,9 @@
+
+
+#-------------------------------------------------------------------
+## OLD COMMANDS: KEEPING THESE FOR BACKWARDS COMPATIBILITY FOR NOW
+#-------------------------------------------------------------------
+
 hmv1 <- function(X, mv, gamma, cluster.init, weightsopt = TRUE) {
   weights.sauv <- NULL
   Kmax <- max(cluster.init)
@@ -194,13 +200,3 @@ Crit2 <- function(X, mv, gamma, weights, cluster) {
   }
   return(sum(varclass))
 }
-
-cutreeNew <- function(R, K, cluster.init) {
-  cc <- cutree(R, K)
-  classif <- cluster.init
-  for (j in 1:length(cc))
-    classif[which(classif == names(cc)[j])] <- cc[j]
-  return(classif)
-}
-
-

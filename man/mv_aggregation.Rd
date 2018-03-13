@@ -4,21 +4,22 @@
 \alias{mv_aggregation}
 \title{Aggregation of hard clusters based on multi-view input}
 \usage{
-mv_aggregation(X, mv, cluster_init, gamma = 2, use_mv_weights = TRUE)
+mv_aggregation(X, mv, clustering_init, gamma = 2, use_mv_weights = TRUE)
 }
 \arguments{
 \item{X}{Matrix of multi-view data, where the first view corresponds to the 
-principal data used to obtain the partition in \code{cluster.init}}
+principal data used to obtain the partition or fuzzy clustering in \code{cluster_init}}
 
 \item{mv}{Vector corresponding to the size of each data view. The sum of \code{mv} should 
 correspond to the number of columns in \code{X}.}
 
-\item{cluster_init}{Vector of available cluster labels}
+\item{clustering_init}{Either a vector of available cluster labels (for hard clustering) or a matrix
+of fuzzy classification labels (For fuzzy clustering)}
 
 \item{gamma}{Parameter that controls the distribution of view weights. Default value is 2.}
 
 \item{use_mv_weights}{If \code{TRUE}, run algorithm in weighted multi-view mode; if FALSE, the
-weight for each view is set to be equal.}
+weight for each view is set to be equal. This option is only used for hard clustering.}
 }
 \value{
 \item{merged_clusters }{Matrix providing each pair of merged clusters at each iteration of the algorithm}

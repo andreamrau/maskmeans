@@ -1,20 +1,16 @@
+
+
+#-------------------------------------------------------------------
+## OLD COMMANDS: KEEPING THESE FOR BACKWARDS COMPATIBILITY FOR NOW
+#-------------------------------------------------------------------
+
 ##   Agrégation de clusters inspirée du multiview avec poids sur indiv ("probapost").
 ## Entrées :
 #  probapost.init : une classif fuzzy (probapost)  n x K
 #  X : les données (le 1er bloc correspond aux données principales utilisées pour obtenir classif)
 # mv : la taille de chaque multiview
 
-#' Aggregation of fuzzy clusters based on multi-view inputs
-#'
-#' @param probapost.init Matrix of available conditional probabilities of cluster membership
-#' for \code{X}
-#' @inheritParams mv_aggregation
-#'
-#' @return
-#' @export
-#'
-#' @examples
-#' 
+
 hmvprobapost <- function(X, mv, gamma, probapost.init)
 {
   weights.sauv <- NULL
@@ -32,7 +28,7 @@ hmvprobapost <- function(X, mv, gamma, probapost.init)
   w <- weightcalculateprobapost(X, mv, centers.init, probapost.init, gamma)
   
   weights.sauv <- w$weights
-  
+
   # pour avoir une structure de hclust
   R <- hclust(dist(centers.init))
   R$method <- "AgregMultiv"
@@ -148,16 +144,7 @@ hmvprobapost <- function(X, mv, gamma, probapost.init)
   )
 }
 
-#' Calculation of multi-view weights for hard clusters
-#'
-#' @inheritParams mv_aggregation
-#' @param centers Matrix of cluster centers
-#' @param probapost Matrix of conditional probabilities of cluster membership for \code{X}
-#'
-#' @return
-#' @export
-#'
-#' @examples
+
 weightcalculateprobapost <-
   function(X, mv, centers, probapost, gamma) {
     ref <- c(0, cumsum(mv))
@@ -190,17 +177,6 @@ weightcalculateprobapost <-
   }
 
 
-#' Calculate the value of criterion 3
-#'
-#' @inheritParams mv_aggregation
-#' @param weights Blah blah
-#' @param probapost Blah blah
-#' @param cluster Blah blah
-#'
-#' @return
-#' @export
-#'
-#' @examples
 Crit3 <- function(X, mv, gamma, weights, probapost, cluster) {
   ref <- c(0, cumsum(mv))
   clustername <- unique(cluster)
@@ -229,18 +205,6 @@ Crit3 <- function(X, mv, gamma, weights, probapost, cluster) {
 
 
 
-
-
-#' Title
-#'
-#' @param R ??
-#' @param K ??
-#' @param probapost.init  ??
-#'
-#' @return
-#' @export
-#'
-#' @examples
 cutreeNewProbapost <- function(R, K, probapost.init) {
   cluster.init <- apply(probapost.init, 1, which.max)
   cc <- cutree(R, K)
