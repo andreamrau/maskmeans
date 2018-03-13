@@ -1,5 +1,5 @@
-# maskmeans
-Multi-view agglomeration/splitting K-means clustering algorithm
+# maskmeans: Multi-view agglomeration/splitting K-means clustering algorithm
+
 
 
  - Aggreg Hierarchique
