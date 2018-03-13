@@ -1,12 +1,13 @@
 ---
 title: "*maskmeans* package: Quick-start guide"
 author: "Andrea Rau, Antoine Godichon-Baggioni, and Cathy Maugis-Rabusseau"
-date: "March 2018"
+date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
     toc: true
+
 vignette: >
-  %\VignetteIndexEntry{maskmeans}
+  %\VignetteIndexEntry{coseq}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
