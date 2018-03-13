@@ -18,6 +18,8 @@
 .Rproj.user/
 /*.Rproj
 dev.R
+.Rbuildignore
+.gitignore~
 
 # produced vignettes
 vignettes/*.html
