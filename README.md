@@ -2,12 +2,13 @@
 
 Primary functions:
 
-- `mv_aggregation`
-- `mv_splitting`
-- `mv_simulate`
+- `maskmeans`, which calls one of the two following functions:
+    - `mv_aggregation`
+    - `mv_splitting`
+- `mv_simulate`, to simulate data types "D1", ... "D6"
 
   
-  - Functions plot
+  Functions plot:
   
   PlotSimuAntoine
   PlotClassif
@@ -19,4 +20,3 @@ Primary functions:
   clustreebis
  
   
-  Need to add pre-treatment of data (e.g. standardize variables and divide by the size of the view). This is in Cathy's Rmd files p 39 (TestAggreg.pdf)

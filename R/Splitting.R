@@ -33,6 +33,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
                          use_mv_weights = TRUE, 
                          perCluster_mv_weights = TRUE) {
   
+  ## TODO fuzzy splitting not added yet
   cluster_init <- clustering_init
   
   if(gamma <= 1) stop("gamma must be greater than 1.")

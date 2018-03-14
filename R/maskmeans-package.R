@@ -46,10 +46,10 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
   
   ## Format data: X, mv
   X <- mv_data
-  if(is.matrix(mv_data) & is.null(mv))
+  if((is.matrix(mv_data) | is.data.frame(mv_data)) & is.null(arg.user$mv))
     stop("If multi-view data are provided as a matrix, the dimension of each view must be specified in mv.")
-  if(is.list(mv_data)) {
-    mv <- lapply(mv_data, ncol)
+  if(is.list(mv_data) & !is.data.frame(mv_data)) {
+    arg.user$mv <- lapply(mv_data, ncol)
     ## Sanity check on dimensions
     nr <- unlist(lapply(mv_data, nrow))
     if(sum(diff(nr))) stop("All views must be measured on the same set of observations.")
@@ -58,22 +58,27 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
     colnames(X) <- unlist(lapply(mv_data, colnames))
     rownames(X) <- rownames(mv_data[[1]])
   }
+  if(is.data.frame(mv_data)) {
+    X <- as.matrix(mv_data)
+    rownames(X) <- rownames(mv_data)
+    colnames(X) <- colnames(mv_data)
+  }
   
   ## Scale data
-  X <- scaleview(X, mv)
+  X <- scaleview(X, arg.user$mv)
   
   ## Feed into appropriate algorithm
   if(type == "aggregation") {
-    mv_run <- mv_aggregation(X=X, mv=mv, clustering_init=clustering_init, 
+    mv_run <- mv_aggregation(X=X, mv=arg.user$mv, clustering_init=clustering_init, 
                              gamma = arg.user$gamma, use_mv_weights = arg.user$use_mv_weights)
   } else {
     if(is.null(Kmax)) stop("Splitting algorithm requires the user to specify Kmax, the maximum number of clusters")
-    mv_run <- mv_splitting(X=X, mv=mv, clustering_init=clustering_init,
+    mv_run <- mv_splitting(X=X, mv=arg.user$mv, clustering_init=clustering_init,
                            Kmax=arg.user$Kmax, gamma=arg.user$gamma, 
                            use_mv_weights = arg.user$use_mv_weights,
                            perCluster_mv_weights = arg.user$perCluster_mv_weights)
   }
-  return(mv_ru)
+  return(mv_run)
 }
 
 ## NOT exported: function to scale and normalize by view size

@@ -2,15 +2,7 @@
 ##      FONCTIONS DE PLOT
 #################################################
 
-#' Title
-#'
-#' @param data 
-#' @param lab 
-#'
-#' @return
-#' @export
-#'
-#' @examples
+
 PlotSimuAntoine <- function(data, lab) {
   g1 <- ggplot(data, aes(x = V1.1, y = V1.2)) +
     geom_point(aes(colour = factor(lab[, 1])))
@@ -23,15 +15,7 @@ PlotSimuAntoine <- function(data, lab) {
   grid.arrange(g1, g2, g3, g4, ncol = 2, nrow = 2)
 }
 
-#' Title
-#'
-#' @param data 
-#' @param classif 
-#'
-#' @return
-#' @export
-#'
-#' @examples
+
 PlotClassif <- function(data, classif) {
   don <- data.frame(classif = as.factor(classif), data = data)
   ggpairs(don,
@@ -42,18 +26,6 @@ PlotClassif <- function(data, classif) {
 ################################
 # exploitation graphique de la sortie de hmv1
 ################################
-#' Title
-#'
-#' @param Res 
-#' @param dendro 
-#' @param heights 
-#' @param weights 
-#' @param CRIT 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 PlotResHMV <- function(Res,
                        dendro = TRUE,
                        heights = TRUE,
@@ -110,14 +82,6 @@ PlotResHMV <- function(Res,
 #############################################
 ##   exploitation graphique de la sortie splittingClusters
 #############################################
-#' Title
-#'
-#' @param Res 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 PlotResSplitting <- function(Res) {
   # plot de CRIT
   aux1 <-
@@ -156,17 +120,6 @@ PlotResSplitting <- function(Res) {
 #############################################
 ##   exploitation graphique de la sortie splittingClustersbis
 #############################################
-#' Title
-#'
-#' @param Res 
-#' @param plotCRIT 
-#' @param weights_step 
-#' @param weights_clust 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 PlotResSplittingbis <-
   function(Res,
            plotCRIT = TRUE,
@@ -222,14 +175,6 @@ PlotResSplittingbis <-
 ###########################
 ##   boxplot des probapost
 ###########################
-#' Title
-#'
-#' @param probapost 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 BoxplotProbaPost <- function(probapost) {
   aux <- data.frame(probamax = apply(probapost, 1, max),
                    lab = as.factor(apply(probapost, 1, which.max)))
@@ -241,17 +186,6 @@ BoxplotProbaPost <- function(probapost) {
 ###########################
 ##    % de probapost > seuil
 ############################
-
-#' Title
-#'
-#' @param Res 
-#' @param probapost.init 
-#' @param seuil 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 plotprobaseuil <- function(Res, probapost.init, seuil = 0.8) {
   aux <- NULL
   for (k in 2:length(Res$CRIT)) {
@@ -274,15 +208,6 @@ plotprobaseuil <- function(Res, probapost.init, seuil = 0.8) {
 ##    fonction clustree pour visualiser les étapes de splitting
 ##     prend l'objet Res venant de splittingClusters et les données X
 ############################
-#' Title
-#'
-#' @param Res 
-#' @param X 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 clustreebis <- function(Res, X) {
   aux <- Res$clustersplithist
   colnames(aux) <- paste0("K", apply(Res$clustersplithist, 2, max))
