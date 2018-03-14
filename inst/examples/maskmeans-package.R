@@ -16,6 +16,10 @@ cluster_init <- sim_6a$labels[,1]
 gamma <- 2 
 
 hard <- mv_aggregation(X=X, mv=mv, clustering_init=cluster_init, gamma=2, use_mv_weights = TRUE)
+
 proba_init <- matrix(runif(nrow(X)*5), ncol=5)
 proba_init <- proba_init / rowSums(proba_init)
 fuzzy <- mv_aggregation(X=X, mv=mv, clustering_init=proba_init, gamma=2)
+
+mv_weights(X, mv,centers_init, cluster_init, gamma, mode="hard")
+

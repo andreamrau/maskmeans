@@ -1,3 +1,7 @@
+#-------------------------------------------------------------------
+## OLD COMMANDS: KEEPING THESE FOR BACKWARDS COMPATIBILITY FOR NOW
+#-------------------------------------------------------------------
+
 ##   Splitting de clusters inspirée du multiview.
 ## Entrées :
 #  cluster.init : une classif du  re
@@ -6,20 +10,6 @@
 # weightsopt : if TRUE, multiview version; if FALSE weights = 1/V
 
 
-#' Title
-#'
-#' @param X 
-#' @param mv 
-#' @param gamma 
-#' @param Kmax 
-#' @param cluster.init 
-#' @param weightsopt 
-#' @param testkmeans 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 splittingClusters = function(X,
                              mv,
                              gamma,
@@ -177,18 +167,6 @@ splittingClusters = function(X,
 #     mv : la taille de chaque multiview
 #     weightsopt : if TRUE, multiview version avec poids par cluster; if FALSE weights = 1/V
 
-#' Title
-#'
-#' @param X 
-#' @param mv 
-#' @param gamma 
-#' @param Kmax 
-#' @param cluster.init 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 splittingClustersbis = function(X, mv, gamma = 1, Kmax, cluster.init) {
   ref = c(0, cumsum(mv))
   CRIT <- 0    #evolution critere general
@@ -314,23 +292,8 @@ splittingClustersbis = function(X, mv, gamma = 1, Kmax, cluster.init) {
 
 
 
-
-
-
 ##################################
 # fonction calcul annexe des poids
-#' Title
-#'
-#' @param X 
-#' @param mv 
-#' @param centers 
-#' @param clustering 
-#' @param gamma 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 weightcalculatebis <- function(X, mv, centers, clustering, gamma) {
   ref = c(0, cumsum(mv))
   weights = matrix(0, nrow = nrow(centers), ncol = length(mv))

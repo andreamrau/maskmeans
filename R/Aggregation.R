@@ -1,9 +1,10 @@
-#' Aggregation of hard clusters based on multi-view input
+#' Aggregation of hard or fuzzy clusters based on multi-view data
 #'
 #' @param X Matrix of multi-view data, where the first view corresponds to the 
 #' principal data used to obtain the partition or fuzzy clustering in \code{cluster_init}
-#' @param mv Vector corresponding to the size of each data view. The sum of \code{mv} should 
-#' correspond to the number of columns in \code{X}.
+#' @param mv (Optional unless \code{X} is a matrix.) If \code{X} is a matrix, vector 
+#' corresponding to the size of each data view. 
+#' The sum of \code{mv} should correspond to the number of columns in \code{X}.
 #' @param gamma Parameter that controls the distribution of view weights. Default value is 2. 
 #' @param clustering_init Either a vector of available cluster labels (for hard clustering) or a matrix
 #' of fuzzy classification labels (For fuzzy clustering)
@@ -326,5 +327,4 @@ cutreeNew <- function(hclust_obj, K, clustering_init) {
   }
 }
 
-
-
+## NOT exported: function to prepare data TODO
