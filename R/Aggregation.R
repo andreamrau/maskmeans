@@ -286,16 +286,6 @@ criterion <- function(X, mv, gamma, weights, cluster, probapost=NULL, mode="hard
   return(varclass_weighted) 
 }
 
-## NOT exported: function to scale and normalize by view size
-
-scaleview <- function(Data, mv){
-  X <- scale(Data)
-  ref <- cumsum(c(0,mv))
-  for (v in 1:length(mv))
-    X[,seq((ref[v]+1),ref[v+1])] = X[,seq((ref[v]+1),ref[v+1])] / mv[v]
-  return(X)
-}
-
 ## NOT exported: function to cut tree
 
 cutreeNew <- function(hclust_obj, K, clustering_init) {
@@ -327,4 +317,3 @@ cutreeNew <- function(hclust_obj, K, clustering_init) {
   }
 }
 
-## NOT exported: function to prepare data TODO
