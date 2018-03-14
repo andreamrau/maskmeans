@@ -23,3 +23,12 @@ fuzzy <- mv_aggregation(X=X, mv=mv, clustering_init=proba_init, gamma=2)
 
 mv_weights(X, mv,centers_init, cluster_init, gamma, mode="hard")
 
+
+## Test 1: hard clustering agglomeration
+
+## Test 2: fuzzy clustering agglomeration
+
+## Test 3: hard clustering splitting
+
+## Test 4: fuzzy clustering splitting
+
