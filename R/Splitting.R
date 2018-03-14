@@ -13,7 +13,6 @@
 #' @param use_mv_weights If \code{TRUE}, run algorithm in weighted multi-view mode; 
 #' if FALSE, the
 #' weight for each view is set to be equal. This option is only used for hard clustering.
-#' @param test_kmeans If \code{TRUE}, ...
 #' @param perCluster_mv_weights If \code{TRUE}, use cluster-specific multi-view weights.
 #' Otherwise use classic multi-view weights.
 #'
@@ -31,7 +30,7 @@
 #' 
 #' @export
 mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2, 
-                         use_mv_weights = TRUE, test_kmeans = TRUE,
+                         use_mv_weights = TRUE, 
                          perCluster_mv_weights = TRUE) {
   
   cluster_init <- clustering_init
@@ -49,20 +48,44 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
   centers_init <- rowsum(X, group=cluster_init) / table(cluster_init)
 
   ## Calculate initial weights
-  if(use_mv_weights) {
-    w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers_init), 
-                    cluster=cluster_init, gamma=gamma, mode=mode)
-  } else{
-    w <- data.frame(weights = rep(1 / length(mv), length(mv)),
-                    weightsmv = rep(1 / length(mv), sum(mv)))
+  if(!perCluster_mv_weights) {
+    if(use_mv_weights) {
+      w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers_init), 
+                      cluster=cluster_init, gamma=gamma, mode=mode)
+    } else{
+      w <- data.frame(weights = rep(1 / length(mv), length(mv)),
+                      weightsmv = rep(1 / length(mv), sum(mv)))
+    }
+    weights_save <- w$weights    
+  } else {
+    w <- mv_weights_perCluster(X=X, mv=mv, centers=as.matrix(centers_init), 
+                               cluster=cluster_init, gamma=gamma,
+                               mode = mode)
+    weights_save[[1]] <- w$weights
   }
-  weights_save <- w$weights
+
   
   ## Calculate weighted per-cluster variances
-  tmp <- centers_init[match(cluster_init, rownames(centers_init)),]
-  varclass <- (w$weights ^ gamma) * 
-    rowsum(colSums(rowsum((X - tmp)^2, group=cluster_init)), 
-                            group=rep(LETTERS[1:length(mv)], times=mv))
+  if(!perCluster_mv_weights) {
+    tmp <- centers_init[match(cluster_init, rownames(centers_init)),]
+    varclass <- (w$weights ^ gamma) * 
+      rowsum(colSums(rowsum((X - tmp)^2, group=cluster_init)), 
+             group=rep(LETTERS[1:length(mv)], times=mv))
+  } else {
+    # TODO
+     varclass <- rep(0, max(cluster.init))
+     for (k in 1:max(cluster.init)) {
+       I <- which(cluster.init == k)
+       for (v in 1:length(mv)) {
+         dv <- (ref[v] + 1):ref[v + 1]
+         varclass[k] <- varclass[k] + ((w$weights[k, v] ^ gamma) * sum((
+           as.matrix(X)[I, dv] - matrix(
+             rep(centers[k, dv], length(I)),
+             nrow = length(I),
+             byrow = T)) ^ 2))
+       }
+     }
+   }
   
   # Calculate general criterion
   CRIT <- c(CRIT, sum(varclass)) 
@@ -80,13 +103,16 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
     
     # Kmeans in the cluster to be split
     #pb avec les data dans le kmeans  -> la multiplication par les poids déforme trop
-    if(test_kmeans) {
+    if(!perCluster_mv_weights) {
       A <- t(w$weightsmv ^ (gamma/2) * t(X[I,])) 
-      a <- kmeans(A, centers = 2, nstart = 50, iter.max = 50)   
-      # (w$weightsmv^gamma)*X[I,] -> ne fait pas ce qu'il faut
-    } else{
-      a <- kmeans(X[I, ], centers = 2, nstart = 50, iter.max = 50)
+    } else {
+      A <- NULL
+      for (i in 1:length(I)) {
+        A <- rbind(A, (w$weightsmv[k, ] ^ (gamma / 2)) * X[I[i], ])
+      }
     }
+    a <- kmeans(A, centers = 2, nstart = 50, iter.max = 50)        
+    
     J1 <- which(a$cluster == 1)
     J2 <- which(a$cluster == 2)
     
@@ -96,31 +122,51 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
     nbcluster <- nbcluster + 1
 
     # History of clustering
-    if(iter > 1)
-      clustersplithist <- cbind(clustersplithist, clustersplithist[, iter])
+    if(iter > 1) clustersplithist <- cbind(clustersplithist, clustersplithist[, iter])
     clustersplithist[I[J1], iter + 1] <- ksplit
     clustersplithist[I[J2], iter + 1] <- nbcluster    
-    
     #length(varclass) +1
+    
     # Update weights
-    ## Calculate initial weights
-    if(use_mv_weights) {
-      w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers), 
-                      cluster=clustersplithist[, iter + 1], 
-                      gamma=gamma, mode=mode)
-    } else{
-      w <- data.frame(weights = rep(1 / length(mv), length(mv)),
-                      weightsmv = rep(1 / length(mv), sum(mv)))
+    if(!perCluster_mv_weights) {
+      if(use_mv_weights) {
+        w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers), 
+                        cluster=clustersplithist[, iter + 1], 
+                        gamma=gamma, mode=mode)
+      } else{
+        w <- data.frame(weights = rep(1 / length(mv), length(mv)),
+                        weightsmv = rep(1 / length(mv), sum(mv)))
+      }
+      weights_save <- cbind(weights_save, w$weights)
+    } else {
+      w <- mv_weights_perCluster(X=X, mv=mv, centers=as.matrix(centers), 
+                                 cluster=clustersplithist[, iter + 1], gamma=gamma,
+                                 mode = mode)
+      weights_save[[iter + 1]] <- w$weights
     }
-    weights_save <- cbind(weights_save, w$weights)
     
     ## Update weighted variances by cluster
-    tmp <- centers[match(clustersplithist[, iter + 1], rownames(centers)),]
-    varclass <- (w$weights ^ gamma) * 
-      rowsum(colSums(rowsum((X - tmp)^2, group=clustersplithist[, iter + 1])), 
-             group=rep(LETTERS[1:length(mv)], times=mv))
+    if(!perCluster_mv_weights) {
+      tmp <- centers[match(clustersplithist[, iter + 1], rownames(centers)),]
+      varclass <- (w$weights ^ gamma) * 
+        rowsum(colSums(rowsum((X - tmp)^2, group=clustersplithist[, iter + 1])), 
+               group=rep(LETTERS[1:length(mv)], times=mv))
+    } else {
+      varclass <- rep(0, nbcluster)
+      for (k in 1:nbcluster) {
+        I <- which(clustersplithist[, iter + 1] == k)
+        for (v in 1:length(mv)) {
+          dv = (ref[v] + 1):ref[v + 1]
+          varclass[k] <- varclass[k] + ((w$weights[k, v] ^ gamma) * sum((
+            as.matrix(X)[I, dv] - matrix(
+              rep(centers[k, dv], length(I)),
+              nrow = length(I),
+              byrow = T)) ^ 2))
+        }
+      }
+    }
     
-    # calcul du critere general
+    # Calculate general criterion
     CRIT <- c(CRIT, sum(varclass))
     iter <- iter + 1
   }
@@ -136,43 +182,47 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
 }
 
 
-## NOT exported: function for calculating per-clustr multi-view weights
+## NOT exported: function for calculating per-cluster multi-view weights
 
-mv_perCluster_weights <- function(X, mv, centers, cluster, gamma, mode) {
+mv_weights_perCluster <- function(X, mv, centers, cluster, gamma, mode) {
   ref <- c(0, cumsum(mv))
-  labcluster <- as.numeric(rownames(centers))
-  if(mode == "fuzzy" & !is.matrix(cluster)) stop("Fuzzy clustering requires a matrix of posterior probabilities.")
-  if(mode == "hard" & !is.vector(cluster)) stop("Hard clustering requires a vector of cluster assignments.")
-  
+  if(mode == "fuzzy" & !is.matrix(cluster)) 
+    stop("Fuzzy clustering requires a matrix of posterior probabilities.")
+  if(mode == "hard" & !is.vector(cluster)) 
+    stop("Hard clustering requires a vector of cluster assignments.")
   if(mode == "hard") {
-    tmp <- centers[match(cluster, rownames(centers)),]
-    aux1 <- as.numeric(rowsum(colSums(rowsum((X - tmp)^2, group=cluster)), 
-                              group=rep(LETTERS[1:length(mv)], times=mv)))
+    weights = matrix(0, nrow = nrow(centers), ncol = length(mv))
+    weightsmv = matrix(0, nrow = nrow(centers), ncol = sum(mv))
+    for (k in 1:nrow(centers)) {
+      aux = NULL
+      for (v in 1:length(mv)) {
+        dv = (ref[v] + 1):ref[v + 1]
+        aux = c(aux, sum((
+          as.matrix(X)[which(clustering == k), dv] - matrix(
+            rep(centers[k, dv], sum(clustering == k)),
+            nrow = sum(clustering == k),
+            byrow = T
+          )
+        ) ^ 2))
+      }
+      if (gamma > 1) {
+        aux = aux ^ (1 / (1 - gamma))
+        aux = aux / sum(aux)
+      }
+      if (gamma == 1) {
+        aux = aux ^ (-1)
+        aux = aux / sum(aux)
+      }
+      aux1 <- NULL
+      for (j in 1:length(mv))
+        aux1 <- c(aux1, rep(aux[j], mv[j]))
+      weights[k, ] = aux
+      weightsmv[k, ] = aux1
+    }
   }
   if(mode == "fuzzy") {
-    aux <- matrix(0, nrow = length(labcluster), ncol = length(mv))
-    for (k in 1:length(labcluster)) {
-      # for each cluster k
-      for (v in 1:length(mv)) {
-        dv <- (ref[v] + 1):ref[v + 1]
-        aux[k, v] <- sum(cluster[, k] * rowSums((sweep(
-          X[, dv, drop = FALSE], 2, centers[k, dv], FUN = "-")) ^ 2))
-      }
-    }
-    aux1 <- apply(aux, 2, sum)
+    stop("Fuzzy clustering not currently supported in splitting algorithm")
   }
-  if (gamma > 1) {
-    aux1 <- aux1 ^ (1 / (1 - gamma))
-    aux1 <- aux1 / sum(aux1)
-  } 
-  if (gamma == 1) {
-    v0 <- which.min(aux1)
-    aux1[v0] <- 1
-    aux1[-v0] <- 0
-  }
-  weightsmv <- NULL
-  for (j in 1:length(mv))
-    weightsmv <- c(weightsmv, rep(aux1[j], mv[j]))
-  return(list(weights = aux1, weightsmv = weightsmv))
+  return(list(weights = weights, weightsmv = weightsmv))
 }
   

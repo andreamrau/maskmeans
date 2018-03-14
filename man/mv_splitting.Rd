@@ -5,7 +5,7 @@
 \title{Splitting of hard or fuzzy clusters based on multi-view data}
 \usage{
 mv_splitting(X, mv, clustering_init, Kmax, gamma = 2, use_mv_weights = TRUE,
-  test_kmeans = TRUE, perCluster_mv_weights = TRUE)
+  perCluster_mv_weights = TRUE)
 }
 \arguments{
 \item{X}{Matrix of multi-view data, where the first view corresponds to the 
@@ -26,8 +26,6 @@ of fuzzy classification labels (For fuzzy clustering)}
 \item{use_mv_weights}{If \code{TRUE}, run algorithm in weighted multi-view mode; 
 if FALSE, the
 weight for each view is set to be equal. This option is only used for hard clustering.}
-
-\item{test_kmeans}{If \code{TRUE}, ...}
 
 \item{perCluster_mv_weights}{If \code{TRUE}, use cluster-specific multi-view weights.
 Otherwise use classic multi-view weights.}
