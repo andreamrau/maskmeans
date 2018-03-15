@@ -16,12 +16,15 @@ gamma <- 2
 Xlist <- list(X[,1:2], X[,3:4], X[,5:6], matrix(X[,7], ncol=1), matrix(X[,8], ncol=1), X[,9:10])
 X_scale <- scaleview(X, arg.user$mv)
 
+
 #-------------------------------------------------------------------
 ## Double-check that all functions provide the same result as before
 #-------------------------------------------------------------------
 
+
 #**************************************
 ## Test 1: hard clustering aggregation
+#**************************************
 cluster_init <- sim_6a$labels[,1]
 set.seed(12345)
 hard_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init, type = "aggregation",
@@ -36,6 +39,7 @@ all.equal(hard_agglom$merged_clusters, hard_agglom_old$merge)        ## THESE AR
 
 #**************************************
 ## Test 2: fuzzy clustering aggregation
+#**************************************
 proba_init <- matrix(runif(nrow(X)*5), ncol=5)
 proba_init <- proba_init / rowSums(proba_init)
 set.seed(12345)
@@ -50,6 +54,7 @@ all.equal(fuzzy_agglom$merged_clusters, fuzzy_agglom_old$merge)
   
 #**************************************  
 ## Test 3: hard clustering splitting
+#**************************************
 set.seed(12345)
 hard_split <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init, type = "splitting", Kmax=20,
                         perCluster_mv_weights = FALSE)  
@@ -67,6 +72,7 @@ all.equal(hard_split$withinss, hard_split_old$withinss)                         
 
 #**************************************
 ## Test 4: hard clustering splitting with per-weights
+#**************************************
 hard_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init, type = "splitting", 
                                    Kmax=20, perCluster_mv_weights=TRUE, gamma=1)  ## ERROR
 
@@ -81,3 +87,7 @@ all.equal(hard_split_perCluster$split_clusters, hard_split_old_perCluster$cluste
 all.equal(hard_split_perCluster$ksplit, hard_split_old_perCluster$ksplit)                        
 all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss)                     ## THESE ARE NOT EQUAL!!!
 
+
+#**************************************
+## Other testing idea: using Xlist instead
+#**************************************
