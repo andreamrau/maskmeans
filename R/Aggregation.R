@@ -21,7 +21,7 @@
 #'
 mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRUE) {
   
-  if(gamma <= 1) stop("gamma must be greater than 1.")
+  if(gamma <= 1) stop("gamma must be greater than or equal to 1.")
   mode <- ifelse(is.vector(clustering_init), "hard", "fuzzy")
   cat("Running in mode:", mode, "\n")
 
@@ -31,7 +31,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
   
   if(mode == "hard") {
     # Calculate initial cluster centers
-    centers_init <- rowsum(X, group=cluster_init) / table(cluster_init)
+    centers_init <- rowsum(X, group=cluster_init) / as.vector(table(cluster_init))
     ## Calculate initial weights
     if(use_mv_weights) {
       w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers_init), 
@@ -145,7 +145,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
   
     if(mode == "hard") {
       # Recalculate the centers
-      centers <- rowsum(X, group=cluster) / table(cluster)
+      centers <- rowsum(X, group=cluster) / as.vector(table(cluster))
       
       # Calcul des poids
       if (use_mv_weights) {
@@ -171,8 +171,8 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
           nj <- length(J)
         }
         if(mode == "fuzzy") {
-          ni <- sum(probapost.init[, i])
-          nj <- sum(probapost.init[, j])
+          ni <- sum(probapost[, i])
+          nj <- sum(probapost[, j])
         }
         D[i, j] <- D[j, i] <- (ni * nj / (ni + nj)) * 
           sum((w$weightsmv ^ gamma) * (centers[i, ] - centers[j, ]) ^ 2)
@@ -260,7 +260,7 @@ criterion <- function(X, mv, gamma, weights, cluster, probapost=NULL, mode="hard
   clustername <- unique(cluster)
   nbcluster <- length(clustername)
   if(mode == "hard") {
-    centers <- as.matrix(rowsum(X, group=cluster) / table(cluster))
+    centers <- as.matrix(rowsum(X, group=cluster) / as.vector(table(cluster)))
     tmp <- centers[match(cluster, rownames(centers)),]
     varclass <- as.matrix(rowsum(t(rowsum((X-tmp)^2, group=cluster)), group=rep(LETTERS[1:length(mv)], times=mv)))
     varclass_weighted <- sum(varclass * (weights^gamma) )
@@ -308,9 +308,9 @@ cutreeNew <- function(hclust_obj, K, clustering_init) {
     probapost <- matrix(0, nrow = nrow(probapost_init), ncol = K)
     for (k in 1:K) {
       if (length(which(cc == k)) > 1) {
-        probapost[, k] = apply(probapost.init[, which(cc == k)], 1, sum)
+        probapost[, k] = apply(probapost_init[, which(cc == k)], 1, sum)
       } else{
-        probapost[, k] = probapost.init[, which(cc == k)]
+        probapost[, k] = probapost_init[, which(cc == k)]
       }
     }
     return(list(classif = classif, probapost = probapost))

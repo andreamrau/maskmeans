@@ -36,7 +36,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
   ## TODO fuzzy splitting not added yet
   cluster_init <- clustering_init
   
-  if(gamma <= 1) stop("gamma must be greater than 1.")
+  if(gamma < 1) stop("gamma must be greater than or equal to 1.")
   mode <- ifelse(is.vector(clustering_init), "hard", "fuzzy")
   if(mode == "fuzzy") stop("Only hard clustering is currently supported.")
   cat("Running in mode:", mode, "\n")
@@ -46,7 +46,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
   clustersplithist <- matrix(c(cluster_init, cluster_init), ncol = 2)  ## Keep track of splits
   
   # Calculate initial cluster centers
-  centers_init <- rowsum(X, group=cluster_init) / table(cluster_init)
+  centers_init <- rowsum(X, group=cluster_init) / as.numeric(table(cluster_init))
 
   ## Calculate initial weights
   if(!perCluster_mv_weights) {
@@ -62,6 +62,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
     w <- mv_weights_perCluster(X=X, mv=mv, centers=as.matrix(centers_init), 
                                cluster=cluster_init, gamma=gamma,
                                mode = mode)
+    weights_save <- c()
     weights_save[[1]] <- w$weights
   }
 
@@ -74,14 +75,14 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
              group=rep(LETTERS[1:length(mv)], times=mv))
   } else {
     # TODO
-     varclass <- rep(0, max(cluster.init))
-     for (k in 1:max(cluster.init)) {
-       I <- which(cluster.init == k)
+     varclass <- rep(0, max(cluster_init))
+     for (k in 1:max(cluster_init)) {
+       I <- which(cluster_init == k)
        for (v in 1:length(mv)) {
          dv <- (ref[v] + 1):ref[v + 1]
          varclass[k] <- varclass[k] + ((w$weights[k, v] ^ gamma) * sum((
            as.matrix(X)[I, dv] - matrix(
-             rep(centers[k, dv], length(I)),
+             rep(centers_init[k, dv], length(I)),
              nrow = length(I),
              byrow = T)) ^ 2))
        }
@@ -95,6 +96,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
   ## Start splitting loop
   iter <- 1
   nbcluster <- max(cluster_init)
+  centers <- as.data.frame(centers_init)
   while(nbcluster < Kmax) {
     
     # Cluster with max varclass
@@ -119,7 +121,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
     
     # Update centers
     centers[c(ksplit, nrow(centers)+1),] <- 
-      rowsum(X[I,], group=a$cluster) / table(a$cluster)
+      rowsum(X[I,], group=a$cluster) / as.numeric(table(a$cluster))
     nbcluster <- nbcluster + 1
 
     # History of clustering
@@ -158,11 +160,9 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
         I <- which(clustersplithist[, iter + 1] == k)
         for (v in 1:length(mv)) {
           dv = (ref[v] + 1):ref[v + 1]
-          varclass[k] <- varclass[k] + ((w$weights[k, v] ^ gamma) * sum((
-            as.matrix(X)[I, dv] - matrix(
-              rep(centers[k, dv], length(I)),
-              nrow = length(I),
-              byrow = T)) ^ 2))
+          varclass[k] <- varclass[k] + ((weights_save[[iter + 1]][k, v] ^ gamma) * sum((
+            as.matrix(X)[I, dv] - matrix(rep(as.numeric(centers[k, dv]), length(I)), 
+                                         nrow = length(I), byrow = T)) ^ 2))
         }
       }
     }
@@ -199,9 +199,9 @@ mv_weights_perCluster <- function(X, mv, centers, cluster, gamma, mode) {
       for (v in 1:length(mv)) {
         dv = (ref[v] + 1):ref[v + 1]
         aux = c(aux, sum((
-          as.matrix(X)[which(clustering == k), dv] - matrix(
-            rep(centers[k, dv], sum(clustering == k)),
-            nrow = sum(clustering == k),
+          as.matrix(X)[which(cluster == k), dv] - matrix(
+            rep(centers[k, dv], sum(cluster == k)),
+            nrow = sum(cluster == k),
             byrow = T
           )
         ) ^ 2))
