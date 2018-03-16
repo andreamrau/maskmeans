@@ -146,6 +146,8 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
     if(mode == "hard") {
       # Recalculate the centers
       centers <- rowsum(X, group=cluster) / as.vector(table(cluster))
+      ## Make sure the order of the rows does not change
+      centers <- centers[match(rownames(centers), noeud),]
       
       # Calcul des poids
       if (use_mv_weights) {

@@ -14,7 +14,7 @@ X <- sim_6a$data
 mv <- c(2,2,2,1,1,2)
 gamma <- 2 
 Xlist <- list(X[,1:2], X[,3:4], X[,5:6], matrix(X[,7], ncol=1), matrix(X[,8], ncol=1), X[,9:10])
-X_scale <- scaleview(X, arg.user$mv)
+X_scale <- scaleview(X, mv)
 
 
 #-------------------------------------------------------------------
@@ -27,15 +27,17 @@ X_scale <- scaleview(X, arg.user$mv)
 #**************************************
 cluster_init <- sim_6a$labels[,1]
 set.seed(12345)
-hard_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init, type = "aggregation",
-                         gamma=gamma) 
+hard_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init, 
+                         type = "aggregation", gamma=gamma) 
   
 set.seed(12345)
-hard_agglom_old <- hmv1(X_scale, mv=mv, gamma=gamma, cluster.init=cluster_init, weightsopt = TRUE)
+hard_agglom_old <- hmv1(X_scale, mv=mv, gamma=gamma, cluster.init=cluster_init, 
+                        weightsopt = TRUE)
   
-all.equal(hard_agglom$weights, hard_agglom_old$weights)              ## THESE ARE NOT EQUAL!!!
-all.equal(hard_agglom$criterion, hard_agglom_old$CRIT)               ## THESE ARE NOT EQUAL!!!
-all.equal(hard_agglom$merged_clusters, hard_agglom_old$merge)        ## THESE ARE NOT EQUAL!!!
+all.equal(hard_agglom$weights, hard_agglom_old$weights,
+          check.attributes = FALSE)              
+all.equal(hard_agglom$criterion, hard_agglom_old$CRIT)               
+all.equal(hard_agglom$merged_clusters, hard_agglom_old$merge)
 
 #**************************************
 ## Test 2: fuzzy clustering aggregation
@@ -43,8 +45,8 @@ all.equal(hard_agglom$merged_clusters, hard_agglom_old$merge)        ## THESE AR
 proba_init <- matrix(runif(nrow(X)*5), ncol=5)
 proba_init <- proba_init / rowSums(proba_init)
 set.seed(12345)
-fuzzy_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, type = "aggregation",
-                          gamma=gamma) 
+fuzzy_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
+                          type = "aggregation", gamma=gamma) 
 set.seed(12345)
 fuzzy_agglom_old <- hmvprobapost(X_scale, mv=mv, gamma=gamma, probapost.init=proba_init)
 
