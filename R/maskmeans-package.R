@@ -65,14 +65,14 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
   }
   
   ## Scale data
-  X <- scaleview(X, arg.user$mv)
+  X <- scaleview(X, unlist(arg.user$mv))
   
   ## Feed into appropriate algorithm
   if(type == "aggregation") {
     mv_run <- mv_aggregation(X=X, mv=arg.user$mv, clustering_init=clustering_init, 
                              gamma = arg.user$gamma, use_mv_weights = arg.user$use_mv_weights)
   } else {
-    if(is.null(Kmax)) stop("Splitting algorithm requires the user to specify Kmax, the maximum number of clusters")
+    if(is.null(arg.user$Kmax)) stop("Splitting algorithm requires the user to specify Kmax, the maximum number of clusters")
     mv_run <- mv_splitting(X=X, mv=arg.user$mv, clustering_init=clustering_init,
                            Kmax=arg.user$Kmax, gamma=arg.user$gamma, 
                            use_mv_weights = arg.user$use_mv_weights,

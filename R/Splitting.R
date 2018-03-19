@@ -74,19 +74,12 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
                                    rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv))), 
                                group=cluster_init))
   } else {
-    # TODO
-     varclass <- rep(0, max(cluster_init))
-     for (k in 1:max(cluster_init)) {
-       I <- which(cluster_init == k)
-       for (v in 1:length(mv)) {
-         dv <- (ref[v] + 1):ref[v + 1]
-         varclass[k] <- varclass[k] + ((w$weights[k, v] ^ gamma) * sum((
-           as.matrix(X)[I, dv] - matrix(
-             rep(centers_init[k, dv], length(I)),
-             nrow = length(I),
-             byrow = T)) ^ 2))
-       }
-     }
+    tmp <- centers_init[match(cluster_init, rownames(centers_init)),]
+    varclass_tmp <- t(rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv)))
+    weights_tmp <- w$weights
+    rownames(weights_tmp) <- 1:nrow(weights_tmp)
+    weights_tmp <- weights_tmp[match(cluster_init, rownames(weights_tmp)),]
+    varclass <- rowSums(rowsum((weights_tmp ^ gamma) * varclass_tmp, group = cluster_init))
    }
   
   # Calculate general criterion
@@ -111,7 +104,10 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
     } else {
       A <- NULL
       for (i in 1:length(I)) {
-        A <- rbind(A, (w$weightsmv[k, ] ^ (gamma / 2)) * X[I[i], ])
+        A <- rbind(A, (w$weightsmv[ksplit, ] ^ (gamma / 2)) * X[I[i], ])
+        ### !!!  Error in previous code had this line:
+#       A <- rbind(A, (w$weightsmv[max(nbcluster), ] ^ (gamma / 2)) * X[I[i], ])
+        
       }
     }
     a <- kmeans(A, centers = 2, nstart = 50, iter.max = 50)        
@@ -155,16 +151,12 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
                                      rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv))), 
                                  group=clustersplithist[, iter + 1]))
     } else {
-      varclass <- rep(0, nbcluster)
-      for (k in 1:nbcluster) {
-        I <- which(clustersplithist[, iter + 1] == k)
-        for (v in 1:length(mv)) {
-          dv = (ref[v] + 1):ref[v + 1]
-          varclass[k] <- varclass[k] + ((weights_save[[iter + 1]][k, v] ^ gamma) * sum((
-            as.matrix(X)[I, dv] - matrix(rep(as.numeric(centers[k, dv]), length(I)), 
-                                         nrow = length(I), byrow = T)) ^ 2))
-        }
-      }
+      tmp <- centers[match(clustersplithist[, iter + 1], rownames(centers)),]
+      varclass_tmp <- t(rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv)))
+      weights_tmp <- weights_save[[iter + 1]]
+      rownames(weights_tmp) <- 1:nrow(weights_tmp)
+      weights_tmp <- weights_tmp[match(clustersplithist[, iter + 1], rownames(weights_tmp)),]
+      varclass <- rowSums(rowsum((weights_tmp ^ gamma) * varclass_tmp, group = clustersplithist[, iter + 1]))
     }
     
     # Calculate general criterion

@@ -82,14 +82,17 @@ set.seed(12345)
 hard_split_old_perCluster <- splittingClustersbis(X=X_scale, mv=mv, gamma=1, 
                                                   Kmax=20, cluster.init=cluster_init) 
 
+## Note: these are not identical as there was an error in the original code
 mapply(all.equal, hard_split_perCluster$weights, hard_split_old_perCluster$weights, 
        check.attributes = FALSE)             
 all.equal(hard_split_perCluster$criterion, hard_split_old_perCluster$CRIT)                        
 all.equal(hard_split_perCluster$split_clusters, hard_split_old_perCluster$clustersplithist)     
-all.equal(hard_split_perCluster$ksplit, hard_split_old_perCluster$ksplit)                        
-all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss)           
+all.equal(hard_split_perCluster$ksplit, hard_split_old_perCluster$ksplit, check.attributes = FALSE)                        
+all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss, check.attributes = FALSE)           
 
 
 #**************************************
 ## Other testing idea: using Xlist instead
 #**************************************
+hard_agglom_list <- maskmeans(mv_data=Xlist, clustering_init=cluster_init, 
+                         type = "aggregation", gamma=gamma) 
