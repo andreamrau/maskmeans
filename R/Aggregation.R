@@ -91,7 +91,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
   rownames(D) <- (-1) * seq(1, Kmax, 1)
   colnames(D) <- (-1) * seq(1, Kmax, 1)
   
-  ## Calculate criterion 
+  ## Calculate criterion
   CRIT <- ifelse(mode == "hard",
                  criterion(X=X, mv=mv, gamma=gamma, weights=w$weights, cluster=cluster_init, mode=mode),
                  criterion(X=X, mv=mv, gamma=gamma, weights=w$weights, cluster=cluster, 
@@ -185,7 +185,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
     CRIT <- c(CRIT, ifelse(mode == "hard",
                    criterion(X=X, mv=mv, gamma=gamma, weights=w$weights, cluster=cluster, mode=mode),
                    criterion(X=X, mv=mv, gamma=gamma, weights=w$weights, cluster=cluster, 
-                             mode=mode, probapost=cluster_init)))
+                             mode=mode, probapost=probapost)))
     
   } ## End of while loop
   

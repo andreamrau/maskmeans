@@ -70,9 +70,9 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
   ## Calculate weighted per-cluster variances
   if(!perCluster_mv_weights) {
     tmp <- centers_init[match(cluster_init, rownames(centers_init)),]
-    varclass <- (w$weights ^ gamma) * 
-      rowsum(colSums(rowsum((X - tmp)^2, group=cluster_init)), 
-             group=rep(LETTERS[1:length(mv)], times=mv))
+    varclass <- rowSums(rowsum(t(w$weights ^ gamma * 
+                                   rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv))), 
+                               group=cluster_init))
   } else {
     # TODO
      varclass <- rep(0, max(cluster_init))
@@ -151,9 +151,9 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
     ## Update weighted variances by cluster
     if(!perCluster_mv_weights) {
       tmp <- centers[match(clustersplithist[, iter + 1], rownames(centers)),]
-      varclass <- (w$weights ^ gamma) * 
-        rowsum(colSums(rowsum((X - tmp)^2, group=clustersplithist[, iter + 1])), 
-               group=rep(LETTERS[1:length(mv)], times=mv))
+      varclass <- rowSums(rowsum(t(w$weights ^ gamma * 
+                                     rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv))), 
+                                 group=clustersplithist[, iter + 1]))
     } else {
       varclass <- rep(0, nbcluster)
       for (k in 1:nbcluster) {
