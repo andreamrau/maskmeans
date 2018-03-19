@@ -16,7 +16,11 @@
 #' To be completed ...
 #'
 #' @keywords models cluster
-#' @importFrom stats hclust cutree
+#' @importFrom stats hclust cutree prcomp
+#' @import ggplot2
+#' @import viridis
+#' @import ggdendro
+#' @imiportFrom tidyr gather
 NULL
 
 #' Multi-view agglomeration or splitting K-means clustering algorithm
@@ -38,6 +42,7 @@ NULL
 #' specified above.
 #' 
 #' @export
+#' @example /inst/examples/maskmeans-package.R
 maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
@@ -78,6 +83,7 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
                            use_mv_weights = arg.user$use_mv_weights,
                            perCluster_mv_weights = arg.user$perCluster_mv_weights)
   }
+  class(mv_run) <- "maskmeans"
   return(mv_run)
 }
 

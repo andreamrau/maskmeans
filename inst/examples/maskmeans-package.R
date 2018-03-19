@@ -1,4 +1,3 @@
-# @example /inst/examples/maskmeans-package.R
 
 ## Simulate data
 set.seed(12345)
@@ -15,6 +14,10 @@ mv <- c(2,2,2,1,1,2)
 gamma <- 2 
 Xlist <- list(X[,1:2], X[,3:4], X[,5:6], matrix(X[,7], ncol=1), matrix(X[,8], ncol=1), X[,9:10])
 X_scale <- scaleview(X, mv)
+
+mv_plot(mv_data=sim_6a$data, mv=mv, labels=sim_6a$labels[,1])
+mv_plot(mv_data=sim_1$data, mv=c(2,2,2,2), labels=sim_1$labels[,1])
+mv_plot(mv_data=sim_2$data, mv=c(2,2,2,2), labels=sim_2$labels[,1])
 
 
 #-------------------------------------------------------------------
