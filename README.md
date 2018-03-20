@@ -20,4 +20,4 @@ There are also two plotting functions:
 - `mv_plot`, to provide a plotting overview of multi-view data. Univariate views are plotted as density plots, bivariate views as scatterplots, and multivariate views as scatterplots of the first two principal components. A vector of cluster labels can be added to color the points according to a unique partition (e.g., the labels of the first view).
 - `maskmeans_plot`, to plot results of the `maskmeans` function. Plot types provided through this function include `type =  c("dendrogram", "heights", "weights_line", "weights", "criterion", "tree")`
 
-See the package [vignette](https://github.com/andreamrau/maskmeans/blob/master/inst/doc/maskmeans.html) for a full example.
+See the package [vignette](https://github.com/andreamrau/maskmeans/blob/master/vignette/maskmeans.Rmd) using `vignette(maskmeans)` for a full example and description

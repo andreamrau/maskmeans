@@ -25,6 +25,7 @@
 #' @importFrom cowplot plot_grid
 #' @importFrom ComplexHeatmap Heatmap
 #' @importFrom capushe capushe
+#' @importFrom ggraph scale_edge_color_continuous
 NULL
 
 #gridExtra, GGally, reshape2, cluster, 

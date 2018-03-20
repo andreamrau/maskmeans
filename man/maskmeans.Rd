@@ -149,9 +149,8 @@ mv_plot(mv_data=sim_2$data, mv=c(2,2,2,2), labels=sim_2$labels[,1])
 
 p <- maskmeans_plot(hard_agglom, mv_data = X)
 p <- maskmeans_plot(fuzzy_agglom, mv_data = X)
-p <- maskmeans_plot(hard_split, mv_data = X, edge_arrow=FALSE)  
-p <- maskmeans_plot(hard_split_perCluster, mv_data = X, edge_arrow=FALSE)  
-
+# p <- maskmeans_plot(hard_split, mv_data = X, edge_arrow=FALSE)  
+# p <- maskmeans_plot(hard_split_perCluster, mv_data = X, edge_arrow=FALSE)  
 p <- maskmeans_plot(hard_split, type="tree", mv_data=X_scale)  
 
 
