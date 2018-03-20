@@ -90,21 +90,43 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
   print(g)
 }
 
+#TODO: remove meta details from clustree plot
+#TODO: create aggregation version of clustree plot
+#TODO: create full example with initial run on K-means algorithm for cluster_init,
+#  FKM for fuzzy version
+#TODO: selectK_hv1 for model selection for aggregation, selectK_split for splitting
+#TODO: add cutreeNew for aggregation
 
+#' Plot results of the multi-view aggregation/splitting K-means algorithm
+#'
+#' Produce a variety of plots after running the multi-view aggregation or splitting
+#' version of the K-means algorithm.
+#' 
+#' @param obj Object of class \code{"maskmeans"} resulting from a call to the \code{maskemans}
+#' function
+#' @param type Graphic to be produced: one or more of \code{c("dendrogram", "heights", 
+#' "weights_line", "weights", "criterion", "tree")}.
+#' @param ... Additional optional parameters. In particular, for cluster tree plots, the original
+#' multi-view data should be provided in \code{mv_data}.
+#'
+#' @return List of one or more ggplot2 objects.
+#' @export
 maskmeans_plot <- function(obj, 
                            type = c("dendrogram", "heights", "weights_line", 
-                                    "weights_area", "criterion")) {
+                                    "weights", "criterion"), ...) {
+  ## Parse ellipsis function
+  providedArgs <- list(...)
+  arg.user <- list(mv_data=NULL)
+  arg.user[names(providedArgs)] <- providedArgs
   
   ## TODO: Add splitting plot ?
-  ## TODO: Add weight plots for per cluster weights
-  
   if(class(obj) != "maskmeans") stop("This plot function expects an object of class maskmeans.")
 
   g <- vector("list", length=0)
 
   if("heights" %in% type) { ## The heights of the tree
     if(!"merged_clusters" %in% names(obj)) {
-      message("--dendrogram heights plot is only possible for the aggregation algorithm.")
+      message("-- dendrogram heights plot is only possible for the aggregation algorithm.")
     } else {
       g1 <- ggplot(data.frame(x = as.factor(seq(2, length(obj$hclust$height))), 
                               y = rev(obj$hclust$height)[-1]), 
@@ -138,10 +160,18 @@ maskmeans_plot <- function(obj,
       xlab("Number of clusters") + theme_bw()
     g[["criterion"]] <- g5
   }
-  if("weights_area" %in% type) { ## Evolution of weights
+  if("weights" %in% type) { ## Evolution of weights
     if(class(obj$weights) == "list") {
-      message("I'm still working on the plot functions for per-cluster weights in the splitting algorithm.")
-    } else {
+      tmp <- cbind(do.call("rbind", obj$weights),
+                   unlist(lapply(obj$weights, function(x) rep(nrow(x), nrow(x)))),
+                   rep(1:length(obj$weights), 
+                       times = unlist(lapply(obj$weights, nrow))))
+      colnames(tmp) <- c(paste0("View ", 1:(ncol(tmp)-2)), "Cluster", "iteration")
+      h <- Heatmap(tmp[,1:(ncol(tmp)-2)], split=tmp[,"Cluster"],
+              col = viridis::viridis(21, begin=1, end=0), cluster_rows=FALSE,
+              heatmap_legend_param = list(title = "weights"))
+      print(h)
+      } else {
       df <- data.frame(cbind(seq(1, ncol(obj$weights)), t(obj$weights)),
                        row.names=NULL)
       rownames(df) <- NULL
@@ -156,7 +186,7 @@ maskmeans_plot <- function(obj,
   }
   if("weights_line" %in% type) {
     if(class(obj$weights) == "list") {
-      message("I'm still working on the plot functions for per-cluster weights in the splitting algorithm.")
+      message("-- weights line plot only available when per-cluster weights are not used.")
     } else {
       df <- data.frame(cbind(seq(1, ncol(obj$weights)), t(obj$weights)),
                        row.names=NULL)
@@ -171,6 +201,36 @@ maskmeans_plot <- function(obj,
       g[["weights_line"]] <- g4
     }
   }
+  if("tree" %in% type) {
+    if(is.null(arg.user$mv_data)) 
+      stop("mv_data must be provided as a matrix or list for tree plot.")
+    if("merged_clusters" %in% names(obj)) {
+      message("tree plot not yet implemented for merged clusters.")
+    } else {
+      ## Format data: X, mv
+      X <- arg.user$mv_data
+      if(is.list(mv_data) & !is.data.frame(mv_data)) {
+        ## Sanity check on dimensions
+        nr <- unlist(lapply(mv_data, nrow))
+        if(sum(diff(nr))) stop("All views must be measured on the same set of observations.")
+        ## Sanity check on rownames ? TODO
+        X <- do.call("cbind", mv_data)
+        colnames(X) <- unlist(lapply(mv_data, colnames))
+        rownames(X) <- rownames(mv_data[[1]])
+      }
+      if(is.data.frame(mv_data)) {
+        X <- as.matrix(mv_data)
+        rownames(X) <- rownames(mv_data)
+        colnames(X) <- colnames(mv_data)
+      }
+      
+      aux <- obj$split_clusters
+      colnames(aux) <- paste0("K", apply(aux, 2, max))
+      dataPlot <- cbind(X, aux)
+      c <- clustree::clustree(data.frame(dataPlot), prefix = "K")
+      print(c)
+    }
+  }
   if(length(g) > 1) {
     print(cowplot::plot_grid(plotlist=g))
   } else {
@@ -179,62 +239,8 @@ maskmeans_plot <- function(obj,
   return(g)
 }
 
-#############################################
-##   exploitation graphique de la sortie splittingClustersbis
-#############################################
-PlotResSplittingbis <-
-  function(Res,
-           weights_step = FALSE,
-           weights_clust = FALSE) {
-    
-    # plot des poids
-    # graphes de l'évolution des poids
-    if (weights_step != FALSE) {
-      for (h in 1:length(weights_step)) {
-        j <- weights_step[h]
-        #!!!!!!!
-        A <- melt(Res$weights[[j]])
-        A[, 1] <- as.factor(A[, 1])
-        A[, 2] <- as.factor(A[, 2])
-        colnames(A) = c("clust", "mv", "weights")
-        g <- ggplot(A, aes(fill = mv, y = weights, x = clust)) +
-          geom_bar(stat = "identity") +
-          ggtitle(paste("step ", j - 1, " - split ", Res$ksplit[j]))
-        print(g)
-      }
-    }
-    
-    if (weights_clust != FALSE) {
-      #!!!!!!
-      A <- melt(Res$weights[[length(Res$weights)]])
-      colnames(A) <- c("clust", "mv", "weights")
-      I <- NULL
-      for (h in 1:length(weights_clust))
-        I <- c(I, which(A$clust == weights_clust[h]))
-      A[, 1] <- as.factor(A[, 1])
-      A[, 2] <- as.factor(A[, 2])
-      g2 <- ggplot(A[I, ], aes(fill = mv, y = weights, x = clust)) +
-        geom_bar(stat = "identity")
-      print(g2)
-    }
-    # plot du splitting   ????
-  }
 
-###########################
-##    fonction clustree pour visualiser les étapes de splitting
-##     prend l'objet Res venant de splittingClusters et les données X
-############################
-clustreebis <- function(Res, X) {
-  aux <- Res$clustersplithist
-  colnames(aux) <- paste0("K", apply(Res$clustersplithist, 2, max))
-  dataPlot <- cbind(X, aux)
-  clustree(data.frame(dataPlot), prefix = "K")
-}
-
-
-
-
-##  Not exported:
+## Not exported:
 probapost_boxplot <- function(probapost) {
   aux <- data.frame(probamax = apply(probapost, 1, max),
                     lab = as.factor(apply(probapost, 1, which.max)))
@@ -259,10 +265,51 @@ probapost_threshold <- function(obj, probapost, threshold = 0.8) {
   print(p)
 }
 
-##!!  I have not implemented the following function:
+
+##!!  I have not implemented the following functions:
 # PlotClassif <- function(data, classif) {
 #   don <- data.frame(classif = as.factor(classif), data = data)
 #   ggpairs(don,
 #           mapping = aes(color = classif),
 #           columns = colnames(don)[-1])
 # }
+#############################################
+##   exploitation graphique de la sortie splittingClustersbis
+#############################################
+# PlotResSplittingbis <-
+#   function(Res,
+#            weights_step = FALSE,
+#            weights_clust = FALSE) {
+#     
+#     # plot des poids
+#     # graphes de l'évolution des poids
+#     if (weights_step != FALSE) {
+#       for (h in 1:length(weights_step)) {
+#         j <- weights_step[h]
+#         #!!!!!!!
+#         A <- melt(Res$weights[[j]])
+#         A[, 1] <- as.factor(A[, 1])
+#         A[, 2] <- as.factor(A[, 2])
+#         colnames(A) = c("clust", "mv", "weights")
+#         g <- ggplot(A, aes(fill = mv, y = weights, x = clust)) +
+#           geom_bar(stat = "identity") +
+#           ggtitle(paste("step ", j - 1, " - split ", Res$ksplit[j]))
+#         print(g)
+#       }
+#     }
+#     
+#     if (weights_clust != FALSE) {
+#       #!!!!!!
+#       A <- melt(Res$weights[[length(Res$weights)]])
+#       colnames(A) <- c("clust", "mv", "weights")
+#       I <- NULL
+#       for (h in 1:length(weights_clust))
+#         I <- c(I, which(A$clust == weights_clust[h]))
+#       A[, 1] <- as.factor(A[, 1])
+#       A[, 2] <- as.factor(A[, 2])
+#       g2 <- ggplot(A[I, ], aes(fill = mv, y = weights, x = clust)) +
+#         geom_bar(stat = "identity")
+#       print(g2)
+#     }
+#     # plot du splitting   ????
+#   }

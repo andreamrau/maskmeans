@@ -139,5 +139,9 @@ p <- maskmeans_plot(fuzzy_agglom)
 p <- maskmeans_plot(hard_split)  
 p <- maskmeans_plot(hard_split_perCluster)  
 
+p <- maskmeans_plot(hard_split, type="tree", mv_data=X_scale)  
+
+
+
 
 }

@@ -18,10 +18,12 @@
 #' @keywords models cluster
 #' @importFrom stats hclust cutree prcomp
 #' @import ggplot2
+#' @importFrom clustree clustree
 #' @importFrom viridis scale_color_viridis scale_fill_viridis
 #' @importFrom ggdendro ggdendrogram
 #' @importFrom tidyr gather
 #' @importFrom cowplot plot_grid
+#' @importFrom ComplexHeatmap Heatmap
 NULL
 
 #' Multi-view agglomeration or splitting K-means clustering algorithm
