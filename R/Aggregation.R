@@ -202,15 +202,15 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
   R$order <- ord
   R$labels <- labels
   
-  return(
-    list(
-      merged_clusters = aggreg,
-#     height = height, order = ord, labels = labels,
-      hclust = R,
-      weights = weights_save,
-      criterion = CRIT
-    )
+  res <- list(
+    merged_clusters = aggreg,
+    #     height = height, order = ord, labels = labels,
+    hclust = R,
+    weights = weights_save,
+    criterion = CRIT
   )
+  class(res) <- "maskmeans"
+  return(res)
 }
 
 
@@ -290,7 +290,22 @@ criterion <- function(X, mv, gamma, weights, cluster, probapost=NULL, mode="hard
 
 ## NOT exported: function to cut tree
 
-cutreeNew <- function(hclust_obj, K, clustering_init) {
+#' Cut an aggregation tree from maskmeans output
+#' 
+#' Cut an aggregation tree into several groups after running \code{maskmeans_aggregation} or
+#' \code{maskmeans(..., type = "aggregation")}.
+#'
+#' @param obj An object of class \code{"maskmeans"}
+#' @param K An integer scalar with the desired number of clusters
+#' @param clustering_init Initial partition or posterior probabilities used to cluster the multi-view data
+#'
+#' @return
+#' \item{classif }{Vector of group memberships after cutting tree}
+#' \item{probapost }{Matrix of group posterior probabilities after cutting tree}
+#' @export
+#'
+maskmeans_cutree <- function(obj, K, clustering_init) {
+  hclust_obj <- obj$hclust
   cluster <- clustering_init
   if(is.vector(cluster)) mode <- "hard"
   if(!is.vector(cluster)) mode <- "fuzzy"

@@ -12,8 +12,9 @@ sim_6b <- mv_simulate(type = "D6", delta=7, n=200, K=5, sigma=0.5)
 X <- sim_6a$data
 mv <- c(2,2,2,1,1,2)
 gamma <- 2 
-Xlist <- list(X[,1:2], X[,3:4], X[,5:6], matrix(X[,7], ncol=1), matrix(X[,8], ncol=1), X[,9:10])
-X_scale <- scaleview(X, mv)
+Xlist <- list(X[,1:2], X[,3:4], X[,5:6], matrix(X[,7], ncol=1), 
+              matrix(X[,8], ncol=1), X[,9:10])
+X_scale <- maskmeans:::scaleview(X, mv)
 
 #-------------------------------------------------------------------
 ## Double-check that all functions provide the same result as before
@@ -22,13 +23,14 @@ X_scale <- scaleview(X, mv)
 #**************************************
 ## Test 1: hard clustering aggregation
 #**************************************
-cluster_init <- sim_6a$labels[,1]
+cluster_init <- kmeans(Xlist[[1]], 20)$cluster
 set.seed(12345)
 hard_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init, 
                          type = "aggregation", gamma=gamma) 
   
 set.seed(12345)
-hard_agglom_old <- hmv1(X_scale, mv=mv, gamma=gamma, cluster.init=cluster_init, 
+hard_agglom_old <- maskmeans:::hmv1(X_scale, mv=mv, gamma=gamma, 
+                        cluster.init=cluster_init, 
                         weightsopt = TRUE)
   
 all.equal(hard_agglom$weights, hard_agglom_old$weights,
@@ -45,9 +47,11 @@ proba_init <- proba_init / rowSums(proba_init)
 fuzzy_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                           type = "aggregation", gamma=gamma) 
 set.seed(12345)
-fuzzy_agglom_old <- hmvprobapost(X_scale, mv=mv, gamma=gamma, probapost.init=proba_init)
+fuzzy_agglom_old <- maskmeans:::hmvprobapost(X_scale, mv=mv, gamma=gamma, 
+                                 probapost.init=proba_init)
 
-all.equal(fuzzy_agglom$weights, fuzzy_agglom_old$weights, check.attributes=FALSE)
+all.equal(fuzzy_agglom$weights, fuzzy_agglom_old$weights, 
+          check.attributes=FALSE)
 all.equal(fuzzy_agglom$criterion, fuzzy_agglom_old$CRIT)           
 all.equal(fuzzy_agglom$merged_clusters, fuzzy_agglom_old$merge)
   
@@ -55,38 +59,47 @@ all.equal(fuzzy_agglom$merged_clusters, fuzzy_agglom_old$merge)
 ## Test 3: hard clustering splitting
 #**************************************
 set.seed(12345)
-hard_split <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init, type = "splitting", Kmax=20,
+hard_split <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init, 
+                        type = "splitting", Kmax=20,
                         perCluster_mv_weights = FALSE)  
 
 set.seed(12345)
-hard_split_old <- splittingClusters(X=X_scale, mv=mv, gamma=gamma, Kmax=20, cluster.init=cluster_init,
+hard_split_old <- maskmeans:::splittingClusters(X=X_scale, mv=mv, gamma=gamma, 
+                                    Kmax=20, cluster.init=cluster_init,
                              weightsopt = TRUE, testkmeans = TRUE) 
 
-all.equal(hard_split$weights, hard_split_old$weights, check.attributes = FALSE) 
+all.equal(hard_split$weights, hard_split_old$weights, 
+          check.attributes = FALSE) 
 all.equal(hard_split$criterion, hard_split_old$CRIT)                         
 all.equal(hard_split$split_clusters, hard_split_old$clustersplithist)          
-all.equal(hard_split$ksplit, hard_split_old$ksplit, check.attributes = FALSE)                             
-all.equal(hard_split$withinss, hard_split_old$withinss, check.attributes = FALSE)     
+all.equal(hard_split$ksplit, hard_split_old$ksplit, 
+          check.attributes = FALSE)                             
+all.equal(hard_split$withinss, hard_split_old$withinss, 
+          check.attributes = FALSE)     
 
 
 #**************************************
 ## Test 4: hard clustering splitting with per-weights
 #**************************************
 set.seed(12345)
-hard_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init, type = "splitting", 
+hard_split_perCluster <- maskmeans(mv_data=X, mv=mv, 
+                                   clustering_init=cluster_init, type = "splitting", 
                                    Kmax=20, perCluster_mv_weights=TRUE, gamma=1) 
 
 set.seed(12345)
-hard_split_old_perCluster <- splittingClustersbis(X=X_scale, mv=mv, gamma=1, 
+hard_split_old_perCluster <- maskmeans:::splittingClustersbis(X=X_scale, mv=mv, gamma=1, 
                                                   Kmax=20, cluster.init=cluster_init) 
 
 ## Note: these are not identical as there was an error in the original code
 mapply(all.equal, hard_split_perCluster$weights, hard_split_old_perCluster$weights, 
        check.attributes = FALSE)             
 all.equal(hard_split_perCluster$criterion, hard_split_old_perCluster$CRIT)                        
-all.equal(hard_split_perCluster$split_clusters, hard_split_old_perCluster$clustersplithist)     
-all.equal(hard_split_perCluster$ksplit, hard_split_old_perCluster$ksplit, check.attributes = FALSE)                        
-all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss, check.attributes = FALSE)           
+all.equal(hard_split_perCluster$split_clusters, 
+          hard_split_old_perCluster$clustersplithist)     
+all.equal(hard_split_perCluster$ksplit, hard_split_old_perCluster$ksplit, 
+          check.attributes = FALSE)                        
+all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss, 
+          check.attributes = FALSE)           
 
 
 #**************************************
@@ -103,10 +116,10 @@ mv_plot(mv_data=sim_6a$data, mv=mv, labels=sim_6a$labels[,1])
 mv_plot(mv_data=sim_1$data, mv=c(2,2,2,2), labels=sim_1$labels[,1])
 mv_plot(mv_data=sim_2$data, mv=c(2,2,2,2), labels=sim_2$labels[,1])
 
-p <- maskmeans_plot(hard_agglom)
-p <- maskmeans_plot(fuzzy_agglom)
-p <- maskmeans_plot(hard_split)  
-p <- maskmeans_plot(hard_split_perCluster)  
+p <- maskmeans_plot(hard_agglom, mv_data = X)
+p <- maskmeans_plot(fuzzy_agglom, mv_data = X)
+p <- maskmeans_plot(hard_split, mv_data = X, edge_arrow=FALSE)  
+p <- maskmeans_plot(hard_split_perCluster, mv_data = X, edge_arrow=FALSE)  
 
 p <- maskmeans_plot(hard_split, type="tree", mv_data=X_scale)  
 

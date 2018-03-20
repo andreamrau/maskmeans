@@ -73,16 +73,18 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
   
   if(sum(is.na(arg.user$labels))) {
     g <- ggplot(Xplot) + 
-      geom_point(data = subset(Xplot, !is.na(y)), aes(x=x, y=y), alpha=0.25) + 
-      geom_density(data = subset(Xplot, is.na(y)), aes(x=x), alpha=0.25) + 
-      facet_wrap(~view, scales="free_y") +
+      geom_point(data = Xplot[which(is.na(Xplot$y)==FALSE),], aes_string(x="x", y="y"), alpha=0.25) + 
+      geom_density(data = Xplot[which(is.na(Xplot$y)==TRUE),], aes_string(x="x"), alpha=0.25) + 
+      facet_wrap("view", scales="free_y") +
       theme_bw() 
   } else {
+    Xplot$labels <- factor(Xplot$labels)
     g <- ggplot(Xplot) + 
-      geom_point(data = subset(Xplot, !is.na(y)), 
-                 aes(x=x, y=y, color=factor(labels), fill=factor(labels)), alpha=0.25) + 
-      geom_density(data = subset(Xplot, is.na(y)), aes(x=x, fill=factor(labels), color=factor(labels)), alpha=0.25) + 
-      facet_wrap(~view, scales="free_y") +
+      geom_point(data = Xplot[which(is.na(Xplot$y)==FALSE),], 
+                 aes_string(x="x", y="y", color="labels", fill="labels"), alpha=0.25) + 
+      geom_density(data = Xplot[which(is.na(Xplot$y)==TRUE),], 
+                   aes_string(x="x", fill="labels", color="labels"), alpha=0.25) + 
+      facet_wrap("view", scales="free_y") +
       guides(color=FALSE, fill=FALSE) + 
       theme_bw() +
       viridis::scale_color_viridis(discrete=TRUE) + viridis::scale_fill_viridis(discrete=TRUE) 
@@ -90,12 +92,7 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
   print(g)
 }
 
-#TODO: remove meta details from clustree plot
-#TODO: create aggregation version of clustree plot
-#TODO: create full example with initial run on K-means algorithm for cluster_init,
-#  FKM for fuzzy version
-#TODO: selectK_hv1 for model selection for aggregation, selectK_split for splitting
-#TODO: add cutreeNew for aggregation
+#TODO: create full example with initial run on K-means algorithm for cluster_init, FKM for fuzzy version
 
 #' Plot results of the multi-view aggregation/splitting K-means algorithm
 #'
@@ -113,13 +110,12 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
 #' @export
 maskmeans_plot <- function(obj, 
                            type = c("dendrogram", "heights", "weights_line", 
-                                    "weights", "criterion"), ...) {
+                                    "weights", "criterion", "tree"), ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
-  arg.user <- list(mv_data=NULL)
+  arg.user <- list(mv_data=NULL, edge_arrow=TRUE)
   arg.user[names(providedArgs)] <- providedArgs
   
-  ## TODO: Add splitting plot ?
   if(class(obj) != "maskmeans") stop("This plot function expects an object of class maskmeans.")
 
   g <- vector("list", length=0)
@@ -130,7 +126,7 @@ maskmeans_plot <- function(obj,
     } else {
       g1 <- ggplot(data.frame(x = as.factor(seq(2, length(obj$hclust$height))), 
                               y = rev(obj$hclust$height)[-1]), 
-                   aes(x=x, y=y)) +
+                   aes_string(x="x", y="y")) +
         geom_bar(stat = "identity") +
         ylab("Height") +
         xlab("Nb of clusters") + theme_bw()
@@ -153,7 +149,7 @@ maskmeans_plot <- function(obj,
       df <- data.frame(x = apply(obj$split_clusters, 2, max),
                  y = obj$criterion[-1])
     }
-    g5 <- ggplot(df, aes(x = x, y = y)) +
+    g5 <- ggplot(df, aes_string(x = "x", y = "y")) +
       geom_point() +
       geom_line() +
       ylab("Criterion value") +
@@ -176,9 +172,10 @@ maskmeans_plot <- function(obj,
                        row.names=NULL)
       rownames(df) <- NULL
       colnames(df) <- c("iteration", as.character(seq(1:nrow(obj$weights))))
-      df <- tidyr::gather(df, key=view, value=value, -iteration)
-      g3 <- ggplot(df, aes(iteration, value)) +
-        geom_area(aes(fill = view, group = view)) +
+      df <- tidyr::gather_(df, key="view", value="value", 
+                           gather_cols=c(as.character(seq(1:nrow(obj$weights)))))
+      g3 <- ggplot(df, aes_string("iteration", "value")) +
+        geom_area(aes_string(fill = "view", group = "view")) +
         ylab("weights") +
         viridis::scale_fill_viridis(discrete=TRUE) + theme_bw()
       g[["weights_area"]] <- g3 
@@ -192,10 +189,11 @@ maskmeans_plot <- function(obj,
                        row.names=NULL)
       rownames(df) <- NULL
       colnames(df) <- c("iteration", as.character(seq(1:nrow(obj$weights))))
-      df <- tidyr::gather(df, key=view, value=value, -iteration)
-      g4 <- ggplot(df, aes(iteration, value, group = view, colour = view)) +
+      df <- tidyr::gather_(df, key="view", value="value", 
+                           gather_cols=c(as.character(seq(1:nrow(obj$weights)))))
+      g4 <- ggplot(df, aes_string("iteration", "value", group = "view", colour = "view")) +
         geom_point() +
-        geom_line(aes(lty = view)) +
+        geom_line(aes_string(lty = "view")) +
         ylab("weights") +
         viridis::scale_color_viridis(discrete=TRUE) + theme_bw()
       g[["weights_line"]] <- g4
@@ -205,31 +203,40 @@ maskmeans_plot <- function(obj,
     if(is.null(arg.user$mv_data)) 
       stop("mv_data must be provided as a matrix or list for tree plot.")
     if("merged_clusters" %in% names(obj)) {
-      message("tree plot not yet implemented for merged clusters.")
+      message("-- tree plot is only possible for the splitting algorithm.")
     } else {
       ## Format data: X, mv
       X <- arg.user$mv_data
-      if(is.list(mv_data) & !is.data.frame(mv_data)) {
+      if(is.list(arg.user$mv_data) & !is.data.frame(arg.user$mv_data)) {
         ## Sanity check on dimensions
-        nr <- unlist(lapply(mv_data, nrow))
+        nr <- unlist(lapply(arg.user$mv_data, nrow))
         if(sum(diff(nr))) stop("All views must be measured on the same set of observations.")
         ## Sanity check on rownames ? TODO
-        X <- do.call("cbind", mv_data)
-        colnames(X) <- unlist(lapply(mv_data, colnames))
-        rownames(X) <- rownames(mv_data[[1]])
+        X <- do.call("cbind", arg.user$mv_data)
+        colnames(X) <- unlist(lapply(arg.user$mv_data, colnames))
+        rownames(X) <- rownames(arg.user$mv_data[[1]])
       }
-      if(is.data.frame(mv_data)) {
-        X <- as.matrix(mv_data)
-        rownames(X) <- rownames(mv_data)
-        colnames(X) <- colnames(mv_data)
+      if(is.data.frame(arg.user$mv_data)) {
+        X <- as.matrix(arg.user$mv_data)
+        rownames(X) <- rownames(arg.user$mv_data)
+        colnames(X) <- colnames(arg.user$mv_data)
       }
-      
       aux <- obj$split_clusters
       colnames(aux) <- paste0("K", apply(aux, 2, max))
-#      dataPlot <- cbind(X, aux[,ncol(aux):1])
+      #      dataPlot <- cbind(X, aux[,ncol(aux):1])
       dataPlot <- cbind(X, aux)
-      c <- clustree::clustree(data.frame(dataPlot), prefix = "K", edge_arrow=FALSE)
-      print(c)
+      c <- clustree::clustree(data.frame(dataPlot), prefix = "K", 
+                              edge_arrow=arg.user$edge_arrow,
+                              #  node_colour="#26828EFF",
+                              scale_node_text=FALSE,
+                              node_size_range=c(3,10),
+                              edge_width = 1.5)  +
+        guides(edge_colour = FALSE, edge_alpha = FALSE) +
+        theme(legend.position = "none") +
+        scale_edge_color_continuous(low = "grey10", high = "grey30") +
+        scale_color_viridis(discrete=TRUE, begin = 0.3, end = .9) 
+ #     print(c)
+      g[["tree"]] <- c
     }
   }
   if(length(g) > 1) {
@@ -245,7 +252,7 @@ maskmeans_plot <- function(obj,
 probapost_boxplot <- function(probapost) {
   aux <- data.frame(probamax = apply(probapost, 1, max),
                     lab = as.factor(apply(probapost, 1, which.max)))
-  p <- ggplot(aux, aes(x = lab, y = probamax)) +
+  p <- ggplot(aux, aes_string(x = "lab", y = "probamax")) +
     geom_boxplot()
   print(p)
 }
@@ -258,7 +265,7 @@ probapost_threshold <- function(obj, probapost, threshold = 0.8) {
       cutreeNewProbapost(obj$hclust, K=k, probapost)$probapost, 1, max) > threshold) * 100 / 
         nrow(probapost))
   }
-  p <- ggplot(data.frame(k = 2:length(obj$criterion), aux = aux), aes(k, aux)) +
+  p <- ggplot(data.frame(k = 2:length(obj$criterion), aux = aux), aes_string("k", "aux")) +
     geom_line() +
     geom_point() +
     xlab("Number of clusters") +

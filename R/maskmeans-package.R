@@ -16,15 +16,18 @@
 #' To be completed ...
 #'
 #' @keywords models cluster
-#' @importFrom stats hclust cutree prcomp
+#' @importFrom stats hclust cutree prcomp dist rnorm kmeans
 #' @import ggplot2
-#' @importFrom clustree clustree
+#' @import clustree
 #' @importFrom viridis scale_color_viridis scale_fill_viridis
 #' @importFrom ggdendro ggdendrogram
-#' @importFrom tidyr gather
+#' @importFrom tidyr gather_
 #' @importFrom cowplot plot_grid
 #' @importFrom ComplexHeatmap Heatmap
+#' @importFrom capushe capushe
 NULL
+
+#gridExtra, GGally, reshape2, cluster, 
 
 #' Multi-view agglomeration or splitting K-means clustering algorithm
 #' 
@@ -79,13 +82,36 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
   if(type == "aggregation") {
     mv_run <- mv_aggregation(X=X, mv=arg.user$mv, clustering_init=clustering_init, 
                              gamma = arg.user$gamma, use_mv_weights = arg.user$use_mv_weights)
+    if(length(mv_run$hclst$labels[-1]) < 10) {
+      message("DDSE for model selection is only possible if at least 10 cluster merges are performed.\n
+               You can use maskmeans::cutreeNew() to cut the tree at a specific value of K if desired.")
+      final_classification <- NULL
+      final_probapost <- NULL
+    } else {
+      KDDSE <- suppressWarnings(selectK_aggregation(mv_run, X))
+      ct <- maskmeans_cutree(mv_run, K=KDDSE, clustering_init=clustering_init)
+      final_classification <- ct$classif
+      final_probapost <- ct$probapost 
+    }
   } else {
     if(is.null(arg.user$Kmax)) stop("Splitting algorithm requires the user to specify Kmax, the maximum number of clusters")
     mv_run <- mv_splitting(X=X, mv=arg.user$mv, clustering_init=clustering_init,
                            Kmax=arg.user$Kmax, gamma=arg.user$gamma, 
                            use_mv_weights = arg.user$use_mv_weights,
                            perCluster_mv_weights = arg.user$perCluster_mv_weights)
+    if(length(apply(mv_run$split_clusters, 2, max)) < 10) {
+      message("DDSE for model selection is only possible if at least 10 cluster splits are performed.\n
+               You can use maskmeans_cutreeNew() to cut the tree at a specific value of K if desired.")
+      final_classification <- NULL
+      final_probapost <- NULL
+    } else {
+      KDDSE <- suppressWarnings(selectK_splitting(mv_run, X))
+      K <- apply(mv_run$split_clusters, 2, max)
+      final_classification <- mv_run$split_clusters[,which(K == KDDSE)]
+      final_probapost <- NULL
+    }
   }
+  mv_run <- c(mv_run, final_classification, final_probapost)
   class(mv_run) <- "maskmeans"
   return(mv_run)
 }
@@ -98,3 +124,30 @@ scaleview <- function(Data, mv){
     X[,seq((ref[v]+1),ref[v+1])] = X[,seq((ref[v]+1),ref[v+1])] / mv[v]
   return(X)
 }
+
+
+## NOT exported: function to select the number of clusters for aggregation
+##   Selection par capushe pour résultat de hv1 (hierarchie dure)   
+##     --> il faut revoir ce qui joue le rôle de la dimension
+selectK_aggregation <- function(obj, X) {
+  M <- as.numeric(obj$hclust$labels[-1])
+  M <- cbind(M, matrix(rep(as.numeric(obj$hclust$labels[-1]),2), ncol=2),
+             rev(obj$criterion))
+  selK <- capushe::capushe(M, n=nrow(data.frame(X)))
+  K <- selK@DDSE@model
+  return(as.numeric(K))
+}
+
+
+## NOT exported: function to select the number of clusters for splitting
+##   Selection par capushe pour résultat de hv1 (splitting dure)  
+##     --> il faut revoir ce qui joue le rôle de la dimension
+selectK_splitting <- function(obj, X) {
+  K <- apply(obj$split_clusters, 2, max)
+#  M <- as.numeric(Res$labels[-1])
+  M <- cbind(matrix(rep(K,3), ncol=3), obj$criterion[-1])
+  selK <- capushe(M, n=nrow(data.frame(X)))
+  K <- selK@DDSE@model
+  return(as.numeric(K))
+}
+

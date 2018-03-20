@@ -34,11 +34,11 @@ multi-view K-means algorithm.
 }
 \examples{
 set.seed(12345)
-sim_1 <- mvsimulate(type = "D1")
-sim_2 <- mvsimulate(type = "D2")
-sim_3 <- mvsimulate(type = "D3")
-sim_4 <- mvsimulate(type = "D4")
-sim_5 <- mvsimulate(type = "D5")
-sim_6a <- mvsimulate(type = "D6")
-sim_6b <- mvsimulate(type = "D6", delta=7, n=200, K=5, sigma=0.5)
+sim_1 <- mv_simulate(type = "D1")
+sim_2 <- mv_simulate(type = "D2")
+sim_3 <- mv_simulate(type = "D3")
+sim_4 <- mv_simulate(type = "D4")
+sim_5 <- mv_simulate(type = "D5")
+sim_6a <- mv_simulate(type = "D6")
+sim_6b <- mv_simulate(type = "D6", delta=7, n=200, K=5, sigma=0.5)
 }

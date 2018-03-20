@@ -279,15 +279,15 @@ splittingClustersbis = function(X, mv, gamma = 1, Kmax, cluster.init) {
     iter <- iter + 1
   }
   
-  return(
-    list(
-      weights = weights.sauv,
-      CRIT = CRIT,
-      withinss = varclass,
-      clustersplithist = clustersplithist,
-      ksplit = ksplit.sauv
-    )
+  res <- list(
+    weights = weights.sauv,
+    CRIT = CRIT,
+    withinss = varclass,
+    clustersplithist = clustersplithist,
+    ksplit = ksplit.sauv
   )
+  class(res) <- "maskmeans"
+  return(res)
 }
 
 

@@ -144,7 +144,7 @@ hmv1 <- function(X, mv, gamma, cluster.init, weightsopt = TRUE) {
   )
 }
 
-#' Calculation of multi-view weights for hard clusters
+# Calculation of multi-view weights for hard clusters
 weightcalculate <- function(X, mv, centers, cluster, gamma) {
   ref <- c(0, cumsum(mv))
   labcluster <- as.numeric(rownames(centers))
