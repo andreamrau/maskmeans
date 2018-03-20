@@ -18,6 +18,10 @@ information are down-weighted by the algorithm.
 
 We begin by loading the necessary packages for this vignette.
 
+```{r, include=FALSE}
+knitr::opts_chunk$set(dev='png')
+```
+
 ```{r}
 library(fclust)
 library(mclust)
@@ -76,9 +80,9 @@ hard_aggreg$final_K
 p <- maskmeans_plot(hard_aggreg, mv_data = X)
 ```
 
-And we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
+If desired, we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
 ```{r, fig.width = 10, fig.height=6}
-mv_plot(mv_data=X, mv=mv, labels=hard_aggreg$final_classification)
+# mv_plot(mv_data=X, mv=mv, labels=hard_aggreg$final_classification)
 adjustedRandIndex(hard_aggreg$final_classification, sim$labels[,1])
 adjustedRandIndex(aggregate_hard_init, sim$labels[,1])
 ```
@@ -98,9 +102,9 @@ fuzzy_aggreg$final_K
 p <- maskmeans_plot(fuzzy_aggreg, mv_data = X)
 ```
 
-And we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
+If desired, we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
 ```{r, fig.width = 10, fig.height=6}
-mv_plot(mv_data=X, mv=mv, labels=fuzzy_aggreg$final_classification)
+# mv_plot(mv_data=X, mv=mv, labels=fuzzy_aggreg$final_classification)
 adjustedRandIndex(fuzzy_aggreg$final_classification, sim$labels[,1])
 adjustedRandIndex(apply(aggregate_fuzzy_init, 1, which.max), sim$labels[,1])
 ```
@@ -119,9 +123,9 @@ hard_split$final_K
 p <- maskmeans_plot(hard_split, mv_data = X)
 ```
 
-And we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
+If desired, we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
 ```{r, fig.width = 10, fig.height=6}
-mv_plot(mv_data=X, mv=mv, labels=hard_split$final_classification)
+# mv_plot(mv_data=X, mv=mv, labels=hard_split$final_classification)
 adjustedRandIndex(hard_split$final_classification, sim$labels[,1])
 adjustedRandIndex(split_hard_init, sim$labels[,1])
 ```
@@ -149,9 +153,9 @@ p <- maskmeans_plot(hard_split_perCluster, mv_data = X, type = c("weights"))
 ```
 
 
-And we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
+If desired we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
 ```{r, fig.width = 10, fig.height=6}
-mv_plot(mv_data=X, mv=mv, labels=hard_split_perCluster$final_classification)
+# v_plot(mv_data=X, mv=mv, labels=hard_split_perCluster$final_classification)
 adjustedRandIndex(hard_split_perCluster$final_classification, sim$labels[,1])
 adjustedRandIndex(split_hard_init, sim$labels[,1])
 ```

@@ -1,3 +1,6 @@
+## ---- include=FALSE------------------------------------------------------
+knitr::opts_chunk$set(dev='png')
+
 ## ------------------------------------------------------------------------
 library(fclust)
 library(mclust)
@@ -26,7 +29,7 @@ hard_aggreg$final_K
 p <- maskmeans_plot(hard_aggreg, mv_data = X)
 
 ## ---- fig.width = 10, fig.height=6---------------------------------------
-mv_plot(mv_data=X, mv=mv, labels=hard_aggreg$final_classification)
+# mv_plot(mv_data=X, mv=mv, labels=hard_aggreg$final_classification)
 adjustedRandIndex(hard_aggreg$final_classification, sim$labels[,1])
 adjustedRandIndex(aggregate_hard_init, sim$labels[,1])
 
@@ -39,7 +42,7 @@ fuzzy_aggreg$final_K
 p <- maskmeans_plot(fuzzy_aggreg, mv_data = X)
 
 ## ---- fig.width = 10, fig.height=6---------------------------------------
-mv_plot(mv_data=X, mv=mv, labels=fuzzy_aggreg$final_classification)
+# mv_plot(mv_data=X, mv=mv, labels=fuzzy_aggreg$final_classification)
 adjustedRandIndex(fuzzy_aggreg$final_classification, sim$labels[,1])
 adjustedRandIndex(apply(aggregate_fuzzy_init, 1, which.max), sim$labels[,1])
 
@@ -52,7 +55,7 @@ hard_split$final_K
 p <- maskmeans_plot(hard_split, mv_data = X)
 
 ## ---- fig.width = 10, fig.height=6---------------------------------------
-mv_plot(mv_data=X, mv=mv, labels=hard_split$final_classification)
+# mv_plot(mv_data=X, mv=mv, labels=hard_split$final_classification)
 adjustedRandIndex(hard_split$final_classification, sim$labels[,1])
 adjustedRandIndex(split_hard_init, sim$labels[,1])
 
@@ -68,7 +71,7 @@ p <- maskmeans_plot(hard_split_perCluster, mv_data = X, type = c("criterion", "t
 p <- maskmeans_plot(hard_split_perCluster, mv_data = X, type = c("weights"))
 
 ## ---- fig.width = 10, fig.height=6---------------------------------------
-mv_plot(mv_data=X, mv=mv, labels=hard_split_perCluster$final_classification)
+# v_plot(mv_data=X, mv=mv, labels=hard_split_perCluster$final_classification)
 adjustedRandIndex(hard_split_perCluster$final_classification, sim$labels[,1])
 adjustedRandIndex(split_hard_init, sim$labels[,1])
 
