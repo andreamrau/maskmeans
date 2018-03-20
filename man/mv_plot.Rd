@@ -2,7 +2,7 @@
 % Please edit documentation in R/FunctionsPlot.R
 \name{mv_plot}
 \alias{mv_plot}
-\title{Plot multi-view data}
+\title{Overview plot of multi-view data}
 \usage{
 mv_plot(mv_data, scale = TRUE, ...)
 }
@@ -26,5 +26,5 @@ are represented as scatterplots, and multivariate views are represented by plott
 principal components.
 }
 \description{
-Graphical representation of multi-view data.
+Global graphical representation of multi-view data.
 }

@@ -55,17 +55,17 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
   for(i in 1:length(arg.user$mv)) {
     dv <- (ref[i] + 1):ref[i + 1]
     if(arg.user$mv[i] == 1) {
-      tmp <- data.frame(x=X[,dv], y=rep(NA, nrow(X)), view=rep(paste0("View_", i), nrow(X)),
+      tmp <- data.frame(x=X[,dv], y=rep(NA, nrow(X)), view=rep(paste0("View ", i), nrow(X)),
                         labels=arg.user$labels)
       Xplot <- rbind(Xplot, tmp)
     } else if(arg.user$mv[i] == 2) {
-      tmp <- data.frame(X[,dv], rep(paste0("View_", i), nrow(X)), labels=arg.user$labels)
+      tmp <- data.frame(X[,dv], rep(paste0("View ", i), nrow(X)), labels=arg.user$labels)
       colnames(tmp) <- c("x", "y", "view", "labels")
       Xplot <- rbind(Xplot, tmp)
     } else {
       pca1 <- prcomp(X[,dv])
       scores <- data.frame(pca1$x)[,1:2]
-      tmp <- cbind(scores, rep(paste0("View_", i), nrow(X)), labels=arg.user$labels)
+      tmp <- cbind(scores, rep(paste0("View ", i), nrow(X)), labels=arg.user$labels)
       colnames(tmp) <- c("x", "y", "view", "labels")
       Xplot <- rbind(Xplot,tmp)
     }
@@ -85,36 +85,43 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
       facet_wrap(~view, scales="free_y") +
       guides(color=FALSE, fill=FALSE) + 
       theme_bw() +
-      scale_color_viridis(discrete=TRUE) + scale_fill_viridis(discrete=TRUE) 
+      viridis::scale_color_viridis(discrete=TRUE) + viridis::scale_fill_viridis(discrete=TRUE) 
   }
   print(g)
 }
 
 
 maskmeans_plot <- function(obj, 
-                           type = c("dendrogram", "heights", "weights_line", "weights_area", "criterion")) {
+                           type = c("dendrogram", "heights", "weights_line", 
+                                    "weights_area", "criterion")) {
   
   ## TODO: Add splitting plot ?
   ## TODO: Add weight plots for per cluster weights
   
   if(class(obj) != "maskmeans") stop("This plot function expects an object of class maskmeans.")
 
+  g <- vector("list", length=0)
+
   if("heights" %in% type) { ## The heights of the tree
-    if(!"merged_clusters" %in% names(obj)) 
-      stop("dendrogram heights plot is only possible for the aggregation algorithm.")
-    g1 <- ggplot(data.frame(x = as.factor(seq(2, length(obj$hclust$height))), 
-                            y = rev(obj$hclust$height)[-1]), 
-                 aes(x=x, y=y)) +
-      geom_bar(stat = "identity") +
-      ylab("Height") +
-      xlab("Nb of clusters")
-    print(g1)
+    if(!"merged_clusters" %in% names(obj)) {
+      message("--dendrogram heights plot is only possible for the aggregation algorithm.")
+    } else {
+      g1 <- ggplot(data.frame(x = as.factor(seq(2, length(obj$hclust$height))), 
+                              y = rev(obj$hclust$height)[-1]), 
+                   aes(x=x, y=y)) +
+        geom_bar(stat = "identity") +
+        ylab("Height") +
+        xlab("Nb of clusters") + theme_bw()
+      g[["heights"]] <- g1 
+    }
   }
-  if("dendro" %in% type) { ## Dendrogram
-    if(!"merged_clusters" %in% names(obj)) 
-      stop("dendrogram heights plot is only possible for the aggregation algorithm.")
-    g2 <- ggdendrogram(obj$hclust, rotate=FALSE, size=2)
-    print(g2)
+  if("dendrogram" %in% type) { ## Dendrogram
+    if(!"merged_clusters" %in% names(obj)) {
+      message("-- dendrogram plot is only possible for the aggregation algorithm.")
+    } else {
+      g2 <- ggdendro::ggdendrogram(obj$hclust, rotate=FALSE, size=2)
+      g[["dendrogram"]] <- g2 
+    }
   }
   if("criterion" %in% type) { ## Evolution of criterion
     if("merged_clusters" %in% names(obj)) {
@@ -128,35 +135,48 @@ maskmeans_plot <- function(obj,
       geom_point() +
       geom_line() +
       ylab("Criterion value") +
-      xlab("Number of clusters")
-    print(g5)
+      xlab("Number of clusters") + theme_bw()
+    g[["criterion"]] <- g5
   }
   if("weights_area" %in% type) { ## Evolution of weights
-    if(class(obj$weights) == "list") stop("I'm still working on the plot functions for per-cluster weights in the splitting algorithm.")
-    
-    df <- data.frame(cbind(seq(1, ncol(obj$weights)), t(obj$weights)))
-    rownames(df) <- NULL
-    colnames(df) <- c("iteration", as.character(seq(1:nrow(obj$weights))))
-    df <- gather(df, key=view, value=value, -iteration)
-    g3 <- ggplot(df, aes(iteration, value)) +
-      geom_area(aes(fill = view, group = view)) +
-      ylab("weights") +
-      scale_fill_viridis(discrete=TRUE)
-    print(g3)
+    if(class(obj$weights) == "list") {
+      message("I'm still working on the plot functions for per-cluster weights in the splitting algorithm.")
+    } else {
+      df <- data.frame(cbind(seq(1, ncol(obj$weights)), t(obj$weights)),
+                       row.names=NULL)
+      rownames(df) <- NULL
+      colnames(df) <- c("iteration", as.character(seq(1:nrow(obj$weights))))
+      df <- tidyr::gather(df, key=view, value=value, -iteration)
+      g3 <- ggplot(df, aes(iteration, value)) +
+        geom_area(aes(fill = view, group = view)) +
+        ylab("weights") +
+        viridis::scale_fill_viridis(discrete=TRUE) + theme_bw()
+      g[["weights_area"]] <- g3 
+    }
   }
   if("weights_line" %in% type) {
-    if(class(obj$weights) == "list") stop("I'm still working on the plot functions for per-cluster weights in the splitting algorithm.")
-  
-    df <- data.frame(cbind(seq(1, ncol(obj$weights)), t(obj$weights)))
-    rownames(df) <- NULL
-    colnames(df) <- c("iteration", as.character(seq(1:nrow(obj$weights))))
-    df <- gather(df, key=view, value=value, -iteration)
-    g4 <- ggplot(df, aes(iteration, value, group = view, colour = view)) +
-      geom_point() +
-      geom_line(aes(lty = view)) +
-      scale_fill_viridis(discrete=TRUE)
-    print(g4)
+    if(class(obj$weights) == "list") {
+      message("I'm still working on the plot functions for per-cluster weights in the splitting algorithm.")
+    } else {
+      df <- data.frame(cbind(seq(1, ncol(obj$weights)), t(obj$weights)),
+                       row.names=NULL)
+      rownames(df) <- NULL
+      colnames(df) <- c("iteration", as.character(seq(1:nrow(obj$weights))))
+      df <- tidyr::gather(df, key=view, value=value, -iteration)
+      g4 <- ggplot(df, aes(iteration, value, group = view, colour = view)) +
+        geom_point() +
+        geom_line(aes(lty = view)) +
+        ylab("weights") +
+        viridis::scale_color_viridis(discrete=TRUE) + theme_bw()
+      g[["weights_line"]] <- g4
+    }
   }
+  if(length(g) > 1) {
+    print(cowplot::plot_grid(plotlist=g))
+  } else {
+    print(g)
+  }
+  return(g)
 }
 
 #############################################
@@ -211,6 +231,9 @@ clustreebis <- function(Res, X) {
   clustree(data.frame(dataPlot), prefix = "K")
 }
 
+
+
+
 ##  Not exported:
 probapost_boxplot <- function(probapost) {
   aux <- data.frame(probamax = apply(probapost, 1, max),
@@ -235,7 +258,6 @@ probapost_threshold <- function(obj, probapost, threshold = 0.8) {
     ylab("Percent of max posterior prob > threshold")
   print(p)
 }
-
 
 ##!!  I have not implemented the following function:
 # PlotClassif <- function(data, classif) {

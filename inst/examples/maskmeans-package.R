@@ -15,11 +15,6 @@ gamma <- 2
 Xlist <- list(X[,1:2], X[,3:4], X[,5:6], matrix(X[,7], ncol=1), matrix(X[,8], ncol=1), X[,9:10])
 X_scale <- scaleview(X, mv)
 
-mv_plot(mv_data=sim_6a$data, mv=mv, labels=sim_6a$labels[,1])
-mv_plot(mv_data=sim_1$data, mv=c(2,2,2,2), labels=sim_1$labels[,1])
-mv_plot(mv_data=sim_2$data, mv=c(2,2,2,2), labels=sim_2$labels[,1])
-
-
 #-------------------------------------------------------------------
 ## Double-check that all functions provide the same result as before
 #-------------------------------------------------------------------
@@ -99,3 +94,18 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss, ch
 #**************************************
 hard_agglom_list <- maskmeans(mv_data=Xlist, clustering_init=cluster_init, 
                          type = "aggregation", gamma=gamma) 
+
+#**************************************
+## Plot functions
+#**************************************
+
+mv_plot(mv_data=sim_6a$data, mv=mv, labels=sim_6a$labels[,1])
+mv_plot(mv_data=sim_1$data, mv=c(2,2,2,2), labels=sim_1$labels[,1])
+mv_plot(mv_data=sim_2$data, mv=c(2,2,2,2), labels=sim_2$labels[,1])
+
+p <- maskmeans_plot(hard_agglom)
+p <- maskmeans_plot(fuzzy_agglom)
+p <- maskmeans_plot(hard_split)  
+p <- maskmeans_plot(hard_split_perCluster)  
+
+

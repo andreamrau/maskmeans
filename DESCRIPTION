@@ -6,7 +6,7 @@ Date: 2018-03-19
 Author: Andrea Rau, Cathy Maugis-Rabusseau, Antoine Godichon-Baggioni
 Maintainer: Andrea Rau <andrea.rau@inra.fr>
 Depends: R (>= 3.3.1)
-Imports: ggplot2, gridExtra, GGally, ggdendro, reshape2, cluster
+Imports: ggplot2, ggdendro, viridis, tidyr, gridExtra, GGally, reshape2, cluster
 Suggests: knitr, rmarkdown, testthat
 Description: Approaches for performing aggregation and splitting of
   existing clustering partition via K-means clustering using multi-view data.
