@@ -226,8 +226,9 @@ maskmeans_plot <- function(obj,
       
       aux <- obj$split_clusters
       colnames(aux) <- paste0("K", apply(aux, 2, max))
+#      dataPlot <- cbind(X, aux[,ncol(aux):1])
       dataPlot <- cbind(X, aux)
-      c <- clustree::clustree(data.frame(dataPlot), prefix = "K")
+      c <- clustree::clustree(data.frame(dataPlot), prefix = "K", edge_arrow=FALSE)
       print(c)
     }
   }
