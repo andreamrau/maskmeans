@@ -52,7 +52,7 @@ NULL
 maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
-  arg.user <- list(gamma=2, use_mv_weights=TRUE, Kmax=NULL, perCluster_mv_weights=TRUE, mv=NULL)
+  arg.user <- list(gamma=2, use_mv_weights=TRUE, Kmax=NULL, perCluster_mv_weights=FALSE, mv=NULL)
   arg.user[names(providedArgs)] <- providedArgs
   
   ## Format data: X, mv
@@ -82,16 +82,18 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
   if(type == "aggregation") {
     mv_run <- mv_aggregation(X=X, mv=arg.user$mv, clustering_init=clustering_init, 
                              gamma = arg.user$gamma, use_mv_weights = arg.user$use_mv_weights)
-    if(length(mv_run$hclst$labels[-1]) < 10) {
+    if(length(mv_run$hclust$labels[-1]) < 10) {
       message("DDSE for model selection is only possible if at least 10 cluster merges are performed.\n
                You can use maskmeans::cutreeNew() to cut the tree at a specific value of K if desired.")
       final_classification <- NULL
       final_probapost <- NULL
+      final_K <- NULL
     } else {
       KDDSE <- suppressWarnings(selectK_aggregation(mv_run, X))
       ct <- maskmeans_cutree(mv_run, K=KDDSE, clustering_init=clustering_init)
       final_classification <- ct$classif
       final_probapost <- ct$probapost 
+      final_K <- KDDSE
     }
   } else {
     if(is.null(arg.user$Kmax)) stop("Splitting algorithm requires the user to specify Kmax, the maximum number of clusters")
@@ -104,14 +106,19 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
                You can use maskmeans_cutreeNew() to cut the tree at a specific value of K if desired.")
       final_classification <- NULL
       final_probapost <- NULL
+      final_K <- NULL
     } else {
       KDDSE <- suppressWarnings(selectK_splitting(mv_run, X))
       K <- apply(mv_run$split_clusters, 2, max)
       final_classification <- mv_run$split_clusters[,which(K == KDDSE)]
       final_probapost <- NULL
+      final_K <- KDDSE
     }
   }
-  mv_run <- c(mv_run, final_classification, final_probapost)
+  mv_run[["final_classification"]] <- final_classification
+  mv_run[["final_probapost"]] <- final_probapost
+  mv_run[["final_K"]] <- final_K
+  
   class(mv_run) <- "maskmeans"
   return(mv_run)
 }

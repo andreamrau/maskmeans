@@ -7,7 +7,7 @@ Author: Andrea Rau, Cathy Maugis-Rabusseau, Antoine Godichon-Baggioni
 Maintainer: Andrea Rau <andrea.rau@inra.fr>
 Depends: R (>= 3.3.1)
 Imports: ggplot2, ggdendro, viridis, tidyr, ComplexHeatmap, clustree, cowplot, capushe
-Suggests: knitr, rmarkdown, testthat, fclust
+Suggests: knitr, rmarkdown, testthat, fclust, mclust
 Description: Approaches for performing aggregation and splitting of
   existing clustering partition via K-means clustering using multi-view data.
 License: GPL (>=3)

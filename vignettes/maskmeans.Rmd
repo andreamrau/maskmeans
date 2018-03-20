@@ -11,4 +11,168 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-*maskmeans* is a package to perform an agglomeration/splitting multi-view K-means algorithm. 
+*maskmeans* is a package to perform an aggregation/splitting multi-view K-means algorithm, starting with an initial
+clustering partition or matrix of posterior probabilities. The goal is to refine/improve the clustering obtained on the
+first, primary view by using additional data views; in addition, views which contain only noise or partially concordant
+information are down-weighted by the algorithm.
+
+We begin by loading the necessary packages for this vignette.
+
+```{r}
+library(fclust)
+library(mclust)
+```
+
+## Data simulation
+
+To illustrate, we begin by simulating some multi-view data (made up of six views) using the `mv_simulate` function. 
+In the first view of these
+data, clusters are found in a circular pattern around the origin, with one cluster at the origin. A total of nine
+true clusters are present in these data. In the second
+view, a portion of the clustering structure is present but there are now pairs of overlapping clusters. In the
+third view, a clustering structure is present that has nothing in common with that of the first view. The fourth
+and fifth views are similar to the second, with the exception of being univariate. Finally, the sixth view includes
+partially concordant clustering information with the first view. We also calculate a vector containing the dimensions
+of each view, respectively.
+
+```{r}
+set.seed(12345)
+sim <- mv_simulate(type = "D6", delta=5, n=200, K=9, sigma=1.5)
+X <- sim$data         ## Simulated data
+mv <- c(2,2,2,1,1,2)  ## Size of each view
+all.equal(sum(mv), ncol(X))
+```
+
+We can visualize these data, as long as the true cluster labels corresponding to the first view, with the
+`mv_plot` function.
+
+```{r, fig.width = 10, fig.height=6}
+mv_plot(mv_data=X, mv=mv, labels=sim$labels[,1])
+```
+
+Now before proceeding, we will obtain an initial hard and fuzzy clustering of the first view; in the case of the
+former, we will make use of a simple K-means algorithm, and in the case of the latter, we will use the `FKM` algorithm
+from the *fclust* package. We will also create an initialization of the hard clustering with a smaller number of clusters,
+for use as illustration in the splitting algorithm
+
+```{r}
+aggregate_hard_init <- kmeans(X[,1:2], centers=15)$cluster
+aggregate_fuzzy_init <- FKM(X[,1:2], k=15, maxit=10, RS=10)$U
+split_hard_init <- kmeans(X[,1:2], centers=2)$cluster
+```
+
+
+## Aggregation multi-view algorithm with hard clustering
+In this section, we illustrate the output of the aggregation multi-view algorithm with hard clustering intialization.
+```{r}
+hard_aggreg <- maskmeans(mv_data=X, mv=mv, clustering_init=aggregate_hard_init, 
+                         type = "aggregation", gamma=2) 
+```
+
+We can check the number of clusters selected via the DDSE algorithm and plot the relevant plots from the `maskmeans` output.
+
+```{r, fig.height = 8, fig.width=10}
+hard_aggreg$final_K
+p <- maskmeans_plot(hard_aggreg, mv_data = X)
+```
+
+And we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
+```{r, fig.width = 10, fig.height=6}
+mv_plot(mv_data=X, mv=mv, labels=hard_aggreg$final_classification)
+adjustedRandIndex(hard_aggreg$final_classification, sim$labels[,1])
+adjustedRandIndex(aggregate_hard_init, sim$labels[,1])
+```
+
+
+## Aggregation multi-view algorithm with fuzzy clustering
+In this section, we illustrate the output of the aggregation multi-view algorithm with fuzzy clustering intialization.
+```{r}
+fuzzy_aggreg <- maskmeans(mv_data=X, mv=mv, clustering_init=aggregate_fuzzy_init, 
+                         type = "aggregation", gamma=2) 
+```
+
+We can check the number of clusters selected via the DDSE algorithm and plot the relevant plots from the `maskmeans` output.
+
+```{r, fig.height = 8, fig.width=10}
+fuzzy_aggreg$final_K
+p <- maskmeans_plot(fuzzy_aggreg, mv_data = X)
+```
+
+And we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
+```{r, fig.width = 10, fig.height=6}
+mv_plot(mv_data=X, mv=mv, labels=fuzzy_aggreg$final_classification)
+adjustedRandIndex(fuzzy_aggreg$final_classification, sim$labels[,1])
+adjustedRandIndex(apply(aggregate_fuzzy_init, 1, which.max), sim$labels[,1])
+```
+
+## Splitting multi-view algorithm with hard clustering
+In this section, we illustrate the output of the splitting multi-view algorithm with hard clustering intialization.
+```{r}
+hard_split <- maskmeans(mv_data=X, mv=mv, clustering_init=split_hard_init, Kmax=20,
+                         type = "splitting", gamma=2, perCluster_mv_weights=FALSE) 
+```
+
+We can check the number of clusters selected via the DDSE algorithm and plot the relevant plots from the `maskmeans` output.
+
+```{r, fig.height = 10, fig.width=10}
+hard_split$final_K
+p <- maskmeans_plot(hard_split, mv_data = X)
+```
+
+And we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
+```{r, fig.width = 10, fig.height=6}
+mv_plot(mv_data=X, mv=mv, labels=hard_split$final_classification)
+adjustedRandIndex(hard_split$final_classification, sim$labels[,1])
+adjustedRandIndex(split_hard_init, sim$labels[,1])
+```
+
+
+
+## Splitting multi-view algorithm with hard clustering and per-cluster weights
+
+In this section, we illustrate the output of the splitting multi-view algorithm with hard clustering intialization and per-cluster weights.
+```{r}
+hard_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=split_hard_init, Kmax=20,
+                         type = "splitting", gamma=2, perCluster_mv_weights=TRUE) 
+```
+
+We can check the number of clusters selected via the DDSE algorithm and plot the relevant plots from the `maskmeans` output.
+
+```{r, fig.height = 8, fig.width=10}
+hard_split_perCluster$final_K
+p <- maskmeans_plot(hard_split_perCluster, mv_data = X, type = c("criterion", "tree"))
+```
+
+This algorithm also outputs per-cluster and per-view weights as splits occur. This can be plotted using a heatmap as follows:
+```{r,  fig.height=8, fig.width=4}
+p <- maskmeans_plot(hard_split_perCluster, mv_data = X, type = c("weights"))
+```
+
+
+And we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
+```{r, fig.width = 10, fig.height=6}
+mv_plot(mv_data=X, mv=mv, labels=hard_split_perCluster$final_classification)
+adjustedRandIndex(hard_split_perCluster$final_classification, sim$labels[,1])
+adjustedRandIndex(split_hard_init, sim$labels[,1])
+```
+
+## Other considerations
+
+The `maskmeans` can also take as input a list of data views, in which case the dimension of each view will be automatically
+calculated.
+
+```{r}
+Xlist <- list(X[,1:2], X[,3:4], X[,5:6], matrix(X[,7], ncol=1), 
+              matrix(X[,8], ncol=1), X[,9:10])
+hard_aggreg_list <- maskmeans(mv_data=Xlist, 
+                              clustering_init=aggregate_hard_init, 
+                              type = "aggregation", gamma=gamma) 
+```
+## Reproducibility
+
+```{r}
+sessionInfo()
+```
+
+
+
