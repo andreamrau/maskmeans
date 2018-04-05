@@ -21,7 +21,7 @@
 #'
 mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRUE) {
   
-  if(gamma <= 1) stop("gamma must be greater than or equal to 1.")
+  if(gamma < 1) stop("gamma must be greater than or equal to 1.")
   mode <- ifelse(is.vector(clustering_init), "hard", "fuzzy")
   cat("Running in mode:", mode, "\n")
 
@@ -58,7 +58,6 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
 
   weights_save <- w$weights
 
-  
   # Format as hclust object
   R <- hclust(dist(centers_init))
   R$method <- "AggregMultiv"
@@ -216,7 +215,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
 
 ## NOT exported: function for calculating multi-view weights
 
-mv_weights <- function(X, mv, centers, cluster, gamma, mode) {
+mv_weights <- function(X, mv, centers, cluster, gamma, mode, delta=NULL) {
   ref <- c(0, cumsum(mv))
   labcluster <- as.numeric(rownames(centers))
   if(mode == "fuzzy" & !is.matrix(cluster)) stop("Fuzzy clustering requires a matrix of posterior probabilities.")
@@ -233,7 +232,8 @@ mv_weights <- function(X, mv, centers, cluster, gamma, mode) {
       # for each cluster k
       for (v in 1:length(mv)) {
         dv <- (ref[v] + 1):ref[v + 1]
-        aux[k, v] <- sum(cluster[, k] * rowSums((sweep(
+        delta <- ifelse(is.null(delta), 1, delta)  ## Include delta if provided
+        aux[k, v] <- sum(cluster[,k]^delta * rowSums((sweep(
           X[, dv, drop = FALSE], 2, centers[k, dv], FUN = "-")) ^ 2))
       }
     }

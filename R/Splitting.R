@@ -15,6 +15,7 @@
 #' weight for each view is set to be equal. This option is only used for hard clustering.
 #' @param perCluster_mv_weights If \code{TRUE}, use cluster-specific multi-view weights.
 #' Otherwise use classic multi-view weights.
+#' @param delta Parameter that controls the weights on the fuzzy classifications \pi_{i,k}
 #'
 #' @return
 #' \item{split_clusters }{Matrix providing the history of each cluster splitting at 
@@ -29,66 +30,114 @@
 #' algorithm}
 #' 
 #' @export
+## TODO: clustersplithist for fuzzy, fix loops
 mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2, 
-                         use_mv_weights = TRUE, 
+                         use_mv_weights = TRUE, delta = 2,
                          perCluster_mv_weights = TRUE) {
   
-  ## TODO fuzzy splitting not added yet
   cluster_init <- clustering_init
   
   if(gamma < 1) stop("gamma must be greater than or equal to 1.")
+  if(delta <= 1) stop("delta must be strictly greater than 1.")
   mode <- ifelse(is.vector(clustering_init), "hard", "fuzzy")
-  if(mode == "fuzzy") stop("Only hard clustering is currently supported.")
   cat("Running in mode:", mode, "\n")
   
   ref <- c(0, cumsum(mv))
   CRIT <- 0    ## Evolution of general criterion
-  clustersplithist <- matrix(c(cluster_init, cluster_init), ncol = 2)  ## Keep track of splits
   
-  # Calculate initial cluster centers
-  centers_init <- rowsum(X, group=cluster_init) / as.numeric(table(cluster_init))
+  if(mode == "hard") { ## Hard mode
+    clustersplithist <- matrix(c(cluster_init, cluster_init), ncol = 2)  ## Keep track of splits
+    # Calculate initial cluster centers
+    centers_init <- rowsum(X, group=cluster_init) / as.numeric(table(cluster_init))    
+  } else {  ## Fuzzy mode
+    Kinit<- ncol(cluster_init)
+    # Initialize centers: TODO FIX THIS LOOP
+    centers_init <- matrix(0,nrow=Kinit, ncol=ncol(X))
+    for(k in 1:Kinit){
+      centers_init[k,]<- apply(matrix(rep(cluster_init[,k]^delta,sum(mv)),nrow=nrow(X)) * X,2,sum) / 
+        sum(cluster_init[,k]^delta)
+    }
+    rownames(centers_init)<-1:Kinit
+  }
 
   ## Calculate initial weights
-  if(!perCluster_mv_weights) {
-    if(use_mv_weights) {
-      w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers_init), 
-                      cluster=cluster_init, gamma=gamma, mode=mode)
-    } else{
-      w <- data.frame(weights = rep(1 / length(mv), length(mv)),
-                      weightsmv = rep(1 / length(mv), sum(mv)))
+  if(!perCluster_mv_weights) { ## Hard mode
+    if(mode == "hard") {
+      if(use_mv_weights) {
+        w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers_init), 
+                        cluster=cluster_init, gamma=gamma, mode=mode)
+      } else{
+        w <- data.frame(weights = rep(1 / length(mv), length(mv)),
+                        weightsmv = rep(1 / length(mv), sum(mv)))
+      }
+    } else { ## Fuzzy mode
+      w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers_inits),
+                      cluster=cluster_init, gamma=gamma, delta=delta, mode=mode)
     }
     weights_save <- w$weights    
   } else {
-    w <- mv_weights_perCluster(X=X, mv=mv, centers=as.matrix(centers_init), 
-                               cluster=cluster_init, gamma=gamma,
-                               mode = mode)
+    if(mode == "hard") { ## Hard mode, per-cluster weights
+      w <- mv_weights_perCluster(X=X, mv=mv, centers=as.matrix(centers_init), 
+                                 cluster=cluster_init, gamma=gamma, mode = mode)
+    } else { ## Fuzzy mode, per-cluster weights
+      w <- mv_weights_perCluster(X=X, mv=mv, centers=centers_init, cluster=cluster_init, 
+                                 gamma=gamma, delta=delta, mode=mode)
+    }
     weights_save <- c()
     weights_save[[1]] <- w$weights
   }
-
   
   ## Calculate weighted per-cluster variances
   if(!perCluster_mv_weights) {
-    tmp <- centers_init[match(cluster_init, rownames(centers_init)),]
-    varclass <- rowSums(rowsum(t(w$weights ^ gamma * 
-                                   rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv))), 
-                               group=cluster_init))
+    if(mode == "hard") { ## Hard mode
+      tmp <- centers_init[match(cluster_init, rownames(centers_init)),]
+      varclass <- rowSums(rowsum(t(w$weights ^ gamma * 
+                                     rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv))), 
+                                 group=cluster_init))      
+    } else { ## Fuzzy mode: TODO Fix up this loop
+      varclass <- rep(0,Kinit)
+      for (k in 1:Kinit){
+        for (i in 1:nrow(X)){
+          for (v in 1:length(mv)){
+            dv <- (ref[v]+1):ref[v+1]
+            varclass[k] <- varclass[k] + ((w$weights[v]^gamma) * 
+                                            (cluster_init[i,k]^delta) * 
+                                            sum((as.matrix(X)[i,dv] - centers_init[k,dv])^2))
+          }
+        }
+      }
+    }
   } else {
-    tmp <- centers_init[match(cluster_init, rownames(centers_init)),]
-    varclass_tmp <- t(rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv)))
-    weights_tmp <- w$weights
-    rownames(weights_tmp) <- 1:nrow(weights_tmp)
-    weights_tmp <- weights_tmp[match(cluster_init, rownames(weights_tmp)),]
-    varclass <- rowSums(rowsum((weights_tmp ^ gamma) * varclass_tmp, group = cluster_init))
+    if(mode == "hard") {  ## Hard mode
+      tmp <- centers_init[match(cluster_init, rownames(centers_init)),]
+      varclass_tmp <- t(rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv)))
+      weights_tmp <- w$weights
+      rownames(weights_tmp) <- 1:nrow(weights_tmp)
+      weights_tmp <- weights_tmp[match(cluster_init, rownames(weights_tmp)),]
+      varclass <- rowSums(rowsum((weights_tmp ^ gamma) * varclass_tmp, group = cluster_init))
+    } else {  ## Fuzzy mode: TODO Fix up this loop
+      varclass <- rep(0, Kinit)
+      for (k in 1:Kinit){
+        for (i in 1:nrow(X)) {
+          for (v in 1:length(mv)){
+            dv <- (ref[v]+1):ref[v+1]
+            varclass[k] <- varclass[k] + ((w$weights[k,v]^gamma) * 
+                                            (cluster_init[i,k]^delta) * 
+                                            sum((as.matrix(X)[i,dv] - centers_init[k,dv])^2))
+          }
+        }
+      }
+    }
    }
   
   # Calculate general criterion
   CRIT <- c(CRIT, sum(varclass)) 
   ksplit_save <- NULL
+  if(mode == "fuzzy") cluster <- cluster_init
   
   ## Start splitting loop
   iter <- 1
-  nbcluster <- max(cluster_init)
+  nbcluster <- ifelse(mode == "hard", max(cluster_init), Kinit)
   centers <- as.data.frame(centers_init)
   while(nbcluster < Kmax) {
     
@@ -98,67 +147,114 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
     ksplit_save <- c(ksplit_save, ksplit)
     
     # Kmeans in the cluster to be split
-    #pb avec les data dans le kmeans  -> la multiplication par les poids déforme trop
-    if(!perCluster_mv_weights) {
-      A <- t(w$weightsmv ^ (gamma/2) * t(X[I,])) 
-    } else {
-      A <- NULL
-      for (i in 1:length(I)) {
-        A <- rbind(A, (w$weightsmv[ksplit, ] ^ (gamma / 2)) * X[I[i], ])
-        ### !!!  Error in previous code had this line:
-#       A <- rbind(A, (w$weightsmv[max(nbcluster), ] ^ (gamma / 2)) * X[I[i], ])
-        
+    # pb avec les data dans le kmeans  -> la multiplication par les poids déforme trop
+    if(mode == "hard") {
+      if(!perCluster_mv_weights) {
+        A <- t(w$weightsmv ^ (gamma/2) * t(X[I,])) 
+      } else {
+        A <- NULL
+        for (i in 1:length(I)) {
+          A <- rbind(A, (w$weightsmv[ksplit, ] ^ (gamma / 2)) * X[I[i], ])
+          #       ### !!!  Error in previous code had this line:
+          #       A <- rbind(A, (w$weightsmv[max(nbcluster), ] ^ (gamma / 2)) * X[I[i], ])
+        } 
+      }
+      a <- kmeans(A, centers = 2, nstart = 50, iter.max = 50)        
+      J1 <- which(a$cluster == 1)
+      J2 <- which(a$cluster == 2)
+      
+      # Update centers
+      centers[c(ksplit, nrow(centers)+1),] <- 
+        rowsum(X[I,], group=a$cluster) / as.numeric(table(a$cluster))
+      nbcluster <- nbcluster + 1
+      
+      # History of clustering
+      if(iter > 1) clustersplithist <- cbind(clustersplithist, clustersplithist[, iter])
+      clustersplithist[I[J1], iter + 1] <- ksplit
+      clustersplithist[I[J2], iter + 1] <- nbcluster    
+      #length(varclass) +1      
+      
+      # Update weights
+      if(!perCluster_mv_weights) {
+        if(use_mv_weights) {
+          w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers), 
+                          cluster=clustersplithist[, iter + 1], 
+                          gamma=gamma, mode=mode)
+        } else{
+          w <- data.frame(weights = rep(1 / length(mv), length(mv)),
+                          weightsmv = rep(1 / length(mv), sum(mv)))
+        }
+        weights_save <- cbind(weights_save, w$weights)
+      } else {
+        w <- mv_weights_perCluster(X=X, mv=mv, centers=as.matrix(centers), 
+                                   cluster=clustersplithist[, iter + 1], gamma=gamma,
+                                   mode = mode)
+        weights_save[[iter + 1]] <- w$weights
+      }
+      
+      ## Update weighted variances by cluster
+      if(!perCluster_mv_weights) {
+        tmp <- centers[match(clustersplithist[, iter + 1], rownames(centers)),]
+        varclass <- rowSums(rowsum(t(w$weights ^ gamma * 
+                                       rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv))), 
+                                   group=clustersplithist[, iter + 1]))
+      } else {
+        tmp <- centers[match(clustersplithist[, iter + 1], rownames(centers)),]
+        varclass_tmp <- t(rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv)))
+        weights_tmp <- weights_save[[iter + 1]]
+        rownames(weights_tmp) <- 1:nrow(weights_tmp)
+        weights_tmp <- weights_tmp[match(clustersplithist[, iter + 1], rownames(weights_tmp)),]
+        varclass <- rowSums(rowsum((weights_tmp ^ gamma) * varclass_tmp, group = clustersplithist[, iter + 1]))
+      }
+    } else {  ## Fuzzy mode
+      ## Splitting in annex functions
+      A <- .FuzzyKmeansSplit(X=X, mv=mv, gamma=gamma, delta=delta, w=w, ksplit=ksplit,
+                             Pik=cluster[,ksplit], ninit=20, niter=30, K=2)
+      
+      ## Update centers
+      centers[ksplit,] <- A$centersNew[1,]
+      centers <- rbind(centers,A$centersNew[2,])
+      nbcluster <- nbcluster+1
+      rownames(centers) <- 1:nbcluster
+      
+      ## Update posterior probabilities
+      cluster[,ksplit] <- A$Pinew[,1]
+      cluster <- cbind(cluster, A$Pinew[,2])
+      
+      #mise à jour des poids alpha
+      if(perCluster_mv_weights) {
+        w <- mv_weights_perCluster(X=X, mv=mv, centers=centers, cluster=cluster, 
+                                   gamma=gamma, delta=delta, mode=mode)
+        weights_save[[iter + 1]] <- w$weights  
+        ## TODO: update this loop
+        varclass=rep(0,nbcluster)
+        for (k in 1:nbcluster){
+          for (i in 1:nrow(X)){
+            for (v in 1:length(mv)){
+              dv=(ref[v]+1):ref[v+1]
+              varclass[k] = varclass[k] + ((w$weights[k,v]^gamma) * (cluster[i,k]^delta) * 
+                                             sum((as.matrix(X)[i,dv] - centers[k,dv])^2))
+            }
+          }
+        }
+      } else {
+        w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers_inits),
+                        cluster=cluster_init, gamma=gamma, delta=delta, mode=mode)
+        weights_save <- cbind(weights_save, w$weights)
+        ## Update weighted variances per cluster TODO
+        varclass <- rep(0,nbcluster)
+        for (k in 1:nbcluster){
+          for (i in 1:nrow(X)){
+            for (v in 1:length(mv)){
+              dv <- (ref[v]+1):ref[v+1]
+              varclass[k] <- varclass[k] + ((w$weights[v]^gamma) * (cluster[i,k]^delta) * 
+                                              sum((as.matrix(X)[i,dv] - centers[k,dv])^2))
+            }
+          }
+        }
       }
     }
-    a <- kmeans(A, centers = 2, nstart = 50, iter.max = 50)        
-    
-    J1 <- which(a$cluster == 1)
-    J2 <- which(a$cluster == 2)
-    
-    # Update centers
-    centers[c(ksplit, nrow(centers)+1),] <- 
-      rowsum(X[I,], group=a$cluster) / as.numeric(table(a$cluster))
-    nbcluster <- nbcluster + 1
 
-    # History of clustering
-    if(iter > 1) clustersplithist <- cbind(clustersplithist, clustersplithist[, iter])
-    clustersplithist[I[J1], iter + 1] <- ksplit
-    clustersplithist[I[J2], iter + 1] <- nbcluster    
-    #length(varclass) +1
-    
-    # Update weights
-    if(!perCluster_mv_weights) {
-      if(use_mv_weights) {
-        w <- mv_weights(X=X, mv=mv, centers=as.matrix(centers), 
-                        cluster=clustersplithist[, iter + 1], 
-                        gamma=gamma, mode=mode)
-      } else{
-        w <- data.frame(weights = rep(1 / length(mv), length(mv)),
-                        weightsmv = rep(1 / length(mv), sum(mv)))
-      }
-      weights_save <- cbind(weights_save, w$weights)
-    } else {
-      w <- mv_weights_perCluster(X=X, mv=mv, centers=as.matrix(centers), 
-                                 cluster=clustersplithist[, iter + 1], gamma=gamma,
-                                 mode = mode)
-      weights_save[[iter + 1]] <- w$weights
-    }
-    
-    ## Update weighted variances by cluster
-    if(!perCluster_mv_weights) {
-      tmp <- centers[match(clustersplithist[, iter + 1], rownames(centers)),]
-      varclass <- rowSums(rowsum(t(w$weights ^ gamma * 
-                                     rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv))), 
-                                 group=clustersplithist[, iter + 1]))
-    } else {
-      tmp <- centers[match(clustersplithist[, iter + 1], rownames(centers)),]
-      varclass_tmp <- t(rowsum(t((X - tmp)^2), group=rep(LETTERS[1:length(mv)], times=mv)))
-      weights_tmp <- weights_save[[iter + 1]]
-      rownames(weights_tmp) <- 1:nrow(weights_tmp)
-      weights_tmp <- weights_tmp[match(clustersplithist[, iter + 1], rownames(weights_tmp)),]
-      varclass <- rowSums(rowsum((weights_tmp ^ gamma) * varclass_tmp, group = clustersplithist[, iter + 1]))
-    }
-    
     # Calculate general criterion
     CRIT <- c(CRIT, sum(varclass))
     iter <- iter + 1
@@ -169,7 +265,8 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
       criterion = CRIT,
       withinss = varclass,
       split_clusters = clustersplithist,
-      ksplit = ksplit_save
+      ksplit = ksplit_save,
+      probapost = ifelse(mode == "fuzzy", cluster, NULL)
     )
   )
 }
@@ -177,45 +274,157 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
 
 ## NOT exported: function for calculating per-cluster multi-view weights
 
-mv_weights_perCluster <- function(X, mv, centers, cluster, gamma, mode) {
+mv_weights_perCluster <- function(X, mv, centers, cluster, gamma, mode, delta=NULL) {
   ref <- c(0, cumsum(mv))
   if(mode == "fuzzy" & !is.matrix(cluster)) 
     stop("Fuzzy clustering requires a matrix of posterior probabilities.")
   if(mode == "hard" & !is.vector(cluster)) 
     stop("Hard clustering requires a vector of cluster assignments.")
-  if(mode == "hard") {
-    weights = matrix(0, nrow = nrow(centers), ncol = length(mv))
-    weightsmv = matrix(0, nrow = nrow(centers), ncol = sum(mv))
-    for (k in 1:nrow(centers)) {
-      aux = NULL
-      for (v in 1:length(mv)) {
-        dv = (ref[v] + 1):ref[v + 1]
+  if(mode == "fuzzy" & is.null(delta))
+    stop("Fuzzy clustering requires a value for delta.")
+  weights = matrix(0, nrow = nrow(centers), ncol = length(mv))
+  weightsmv = matrix(0, nrow = nrow(centers), ncol = sum(mv))
+  for (k in 1:nrow(centers)) {
+    aux = NULL
+    for (v in 1:length(mv)) {
+      dv = (ref[v] + 1):ref[v + 1]
+      if(mode == "hard") {  ## Hard mode
         aux = c(aux, sum((
           as.matrix(X)[which(cluster == k), dv] - matrix(
             rep(centers[k, dv], sum(cluster == k)),
             nrow = sum(cluster == k),
-            byrow = T
-          )
-        ) ^ 2))
+            byrow = T)) ^ 2))
+      } else {  ## Fuzzy mode
+        for (v in 1:length(mv)){
+          dv = (ref[v]+1):ref[v + 1]
+          aux=c(aux, sum((cluster[,k]^delta) * 
+                           rowSums((sweep(X[,dv,drop=FALSE],2,
+                                          centers[k,dv],FUN="-"))^2)) )
+        }
       }
-      if (gamma > 1) {
-        aux = aux ^ (1 / (1 - gamma))
-        aux = aux / sum(aux)
-      }
-      if (gamma == 1) {
-        aux = aux ^ (-1)
-        aux = aux / sum(aux)
-      }
-      aux1 <- NULL
-      for (j in 1:length(mv))
-        aux1 <- c(aux1, rep(aux[j], mv[j]))
-      weights[k, ] = aux
-      weightsmv[k, ] = aux1
     }
-  }
-  if(mode == "fuzzy") {
-    stop("Fuzzy clustering not currently supported in splitting algorithm")
+    if (gamma > 1) {
+      aux = aux ^ (1 / (1 - gamma))
+      aux = aux / sum(aux)
+    }
+    if (gamma == 1) {
+      aux = aux ^ (-1)
+      aux = aux / sum(aux)
+    }
+    aux1 <- NULL
+    for (j in 1:length(mv))
+      aux1 <- c(aux1, rep(aux[j], mv[j]))
+    weights[k, ] = aux
+    weightsmv[k, ] = aux1
   }
   return(list(weights = weights, weightsmv = weightsmv))
 }
+
+
+## NOT exported: fuzzy K-means with vector of probabilities
+
+###  j'ai du mettre plein d'exceptions à cause du cas delta=1 qui mene à des CRIT=NaN
+###  TODO la programmation est à améliorer!!!
+.FuzzyKmeansSplit <- function(X,mv,gamma,delta,w,ksplit,Pik,ninit=20,
+                              niter=20, K=2) {
+  #pour stocker les réponses
+  Pinew <- matrix(0,nrow=nrow(X),ncol=K)
+  centersNew <- matrix(0,nrow=K,ncol=ncol(X))
+  A1 <- .FuzzyKmeansaux(X,w,gamma,delta, ksplit, Pik, K,niter)
+  for(z in 1:ninit) {   #boucle sur le nombre d'essai du fuzzy Kmeans
+    A2 <- .FuzzyKmeansaux(X,w,gamma,delta, ksplit, Pik, K,niter)
+    if(!is.na(A1$CRIT)){
+      if (!is.na(A2$CRIT)){
+        if (A2$CRIT<A1$CRIT){
+          A1 <- A2
+        }
+      }  
+    } else{ 
+      if(!is.na(A2$CRIT)){
+        A1 <- A2
+      }
+    }
+  }  
+  Pinew <- A1$Pinew
+  centersNew <- A1$centersNew
+  return(result=list(Pinew= Pinew, centersNew= centersNew))
+}
+
+## NOT exported: fuzzy K-means auxiliary function with vector of probabilities
+
+.FuzzyKmeansaux <- function(X,w,gamma,delta, ksplit, Pik, K,niter){
   
+  # Z_i^{(v)} = alpha_v^{gamma/2} X_i^{(v)}
+  if (is.vector(w$weights)) {       # même poids par classe (\alpha_v)
+    Z <- data.frame(matrix(rep(w$weightsmv^(gamma/2),nrow(X)),nrow=nrow(X),byrow=T) * X)
+  } else{       #poids(\alpha_{k,v})
+    Z <- data.frame(matrix(rep(w$weightsmv[ksplit,]^(gamma/2),nrow(X)),nrow=nrow(X),byrow=T) * X)  
+  }
+  
+  #init de stockage des Pinew et centersNew
+  Pinew <- matrix(0,nrow=nrow(X),ncol=K)
+  centersNew <- matrix(0,nrow=K,ncol=ncol(X))
+  eta <- matrix(0,nrow=K,ncol=ncol(X))
+  m <- matrix(0,nrow=nrow(X),ncol=K)   # \|Z_i - \eta_k\|^2
+  CRIT <- NULL
+  
+  #initialisation des centres
+  centersNew <- kmeans(X,K)$centers
+  
+  if (delta>1){
+    for(l in 1:niter){
+      # Mise à jour des poids
+      for (k in 1:K){  
+        if (is.vector(w$weights)){       # même poids par classe (\alpha_v)
+          eta[k,] <- centersNew[k,] * w$weightsmv^(gamma/2)
+        } else {
+          eta[k,] <- centersNew[k,] * w$weightsmv[ksplit,]^(gamma/2)  
+        }
+        m[,k] <- rowSums((matrix(rep(eta[k,],nrow(Z)),byrow=TRUE, nrow=nrow(Z))-Z)^2)
+      }
+      Pinew <- (m^(1/(1-delta))) / matrix(rep(apply(m^(1/(1-delta)),1,sum),K),ncol=K)
+      Pinew <-  matrix(rep(Pik,K),ncol=K) * Pinew
+      
+      # Mise à jour des centres
+      for (k in 1:K)
+        centersNew[k,] <- apply(matrix(rep((Pinew[,k]^delta),ncol(X)),nrow=nrow(X)) * X, 2, sum) / 
+          sum(Pinew[,k]^delta)
+    } # fin de la boucle ninter
+    
+    # calcul du critere
+    for (k in 1:K){ 
+      if (is.vector(w$weights)){       # même poids par classe (\alpha_v)
+        eta[k,] <- centersNew[k,] * w$weightsmv^(gamma/2)
+      } else{
+        eta[k,] <- centersNew[k,] * w$weightsmv[ksplit,]^(gamma/2)  
+      }
+      m[,k]=rowSums((matrix(rep(eta[k,],nrow(Z)),byrow=T,nrow=nrow(Z))-Z)^2)
+    }
+    CRIT <- sum((Pinew^delta) * m)
+    
+  } else {cat("Error delta value")}
+  
+  #if(delta==1){
+  #  for (l in 1:niter){
+  #    for (k in 1:K){  
+  #      eta[k,] = centersNew[k,] * w$weightsmv[ksplit,]^(gamma/2)
+  #      m[,k]=rowSums((matrix(rep(eta[k,],nrow(Z)),byrow=T,nrow=nrow(Z))-Z)^2)
+  #    }
+  #    k0=apply(m,1,which.max)
+  #    Pinew=matrix(0,nrow=nrow(X),ncol=K)
+  #    for (i in 1:nrow(X))
+  #      Pinew[i,k0[i]] = Pik[i]
+  #      #Pinew = matrix(rep(Pik,K),ncol=K)  *  ((m-matrix(rep(apply(m,1,max),K),ncol=K))<0) 
+  #    for (k in 1:K)
+  #      centersNew[k,] = apply(matrix(rep((Pinew[,k]^delta),ncol(X)),nrow=nrow(X)) * X,2,sum) / sum(Pinew[,k]^delta)
+  #  }  # fin de la boucle iter
+  #  for (k in 1:K){  
+  #    eta[k,] = centersNew[k,] * w$weightsmv[ksplit,]^(gamma/2)
+  #    m[,k]=rowSums((matrix(rep(eta[k,],nrow(Z)),byrow=T,nrow=nrow(Z))-Z)^2)
+  #  }
+  #  CRIT=sum((Pinew^delta) * m) 
+  #  
+  #}else{cat("error delta")}
+  
+  return(list(Pinew=Pinew,centersNew=centersNew,CRIT=CRIT))  
+}
