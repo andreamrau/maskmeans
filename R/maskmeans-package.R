@@ -102,7 +102,9 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
                            Kmax=arg.user$Kmax, gamma=arg.user$gamma, 
                            use_mv_weights = arg.user$use_mv_weights,
                            perCluster_mv_weights = arg.user$perCluster_mv_weights)
-    if(length(apply(mv_run$split_clusters, 2, max)) < 10) {
+    if(is.null(mv_run$split_clusters)) { #TODO Model selection for fuzzy probapost
+      final_classification <- final_probapost <- final_K <- NA
+    } else if(length(apply(mv_run$split_clusters, 2, max)) < 10) {
       message("DDSE for model selection is only possible if at least 10 cluster splits are performed.\n
                You can use maskmeans_cutreeNew() to cut the tree at a specific value of K if desired.")
       final_classification <- NULL
@@ -114,7 +116,7 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
       final_classification <- mv_run$split_clusters[,which(K == KDDSE)]
       final_probapost <- NULL
       final_K <- KDDSE
-    }
+    } 
   }
   mv_run[["final_classification"]] <- final_classification
   mv_run[["final_probapost"]] <- final_probapost

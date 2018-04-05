@@ -134,6 +134,50 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
 
 
 #**************************************
+## Test 5: fuzzy clustering splitting
+#**************************************
+\dontrun{
+  
+  set.seed(12345)
+  proba_init <- matrix(runif(nrow(X)*5), ncol=5)
+  proba_init <- proba_init / rowSums(proba_init)
+  fuzzy_split <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
+                           type = "splitting", gamma=gamma, delta = 2,
+                           perCluster_mv_weights = FALSE, Kmax = 7) 
+  set.seed(12345)
+  fuzzy_split_old <- maskmeans:::splittingProbapost(X=X_scale, mv=mv,
+                                                    gamma=gamma, delta=2, Kmax=7, 
+                                                    probapost.init=proba_init)
+  ## TODO: NOT QUITE EQUAL?
+  all.equal(fuzzy_split$weights, fuzzy_split_old$weights,
+            check.attributes=FALSE)
+  all.equal(fuzzy_split$criterion, fuzzy_split_old$CRIT)
+  all.equal(fuzzy_split$probapost, fuzzy_split_old$probapost)
+  
+}
+
+
+
+#**************************************
+## Test 6: fuzzy clustering splitting with per-weights
+#**************************************
+\dontrun{
+  
+  set.seed(12345)
+  fuzzy_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
+                                      type = "splitting", gamma=gamma, delta = 2,
+                                      perCluster_mv_weights = TRUE, Kmax = 7) 
+  set.seed(12345)
+  fuzzy_split_old_perCluster <- maskmeans:::splittingProbapostbis(X=X_scale, mv=mv,
+     gamma=gamma, delta=2, Kmax=7, probapost.init=proba_init)
+  all.equal(fuzzy_split_perCluster$weights, fuzzy_split_old_perCluster$weights, 
+             check.attributes=FALSE)
+  all.equal(fuzzy_split_perCluster$criterion, fuzzy_split_old_perCluster$CRIT)           
+  all.equal(fuzzy_split_perCluster$probapost, fuzzy_split_old_perCluster$probapost)
+  
+}
+
+#**************************************
 ## Other testing idea: using Xlist instead
 #**************************************
 hard_agglom_list <- maskmeans(mv_data=Xlist, clustering_init=cluster_init, 

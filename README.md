@@ -13,7 +13,7 @@ devtools::install_github("andreamrau/maskmeans", build_vignettes=TRUE)
 library(maskmeans)
 ```
 
-The primary functions of this package are as follows:
+*maskmean* incorporates algorithms for aggregating or splitting an existing hard or fuzzy classification using multi-view data. The primary functions of this package are as follows:
 
 - `maskmeans`, which itself calls one of the two following functions:
     * `mv_aggregation`
@@ -21,7 +21,7 @@ The primary functions of this package are as follows:
 - `maskmeans_cutree`:  cut an aggregation tree for a specified number of clusters
 - `mv_simulate` to simulate data types `"D1"`, ... `"D6"`
 
-There are also two plotting functions:
+There are also two main plotting functions:
 
 - `mv_plot`, to provide a plotting overview of multi-view data. Univariate views are plotted as density plots, bivariate views as scatterplots, and multivariate views as scatterplots of the first two principal components. A vector of cluster labels can be added to color the points according to a unique partition (e.g., the labels of the first view).
 - `maskmeans_plot`, to plot results of the `maskmeans` function. Plot types provided through this function include `type =  c("dendrogram", "heights", "weights_line", "weights", "criterion", "tree")`

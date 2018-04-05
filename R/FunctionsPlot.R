@@ -147,7 +147,7 @@ maskmeans_plot <- function(obj,
                        y = rev(obj$criterion))
     } else {
       df <- data.frame(x = apply(obj$split_clusters, 2, max),
-                 y = obj$criterion[-1])
+                 y = obj$criterion)
     }
     g5 <- ggplot(df, aes_string(x = "x", y = "y")) +
       geom_point() +

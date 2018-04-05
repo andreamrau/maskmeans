@@ -27,7 +27,7 @@ of fuzzy classification labels (For fuzzy clustering)}
 if FALSE, the
 weight for each view is set to be equal. This option is only used for hard clustering.}
 
-\item{delta}{Parameter that controls the weights on the fuzzy classifications \pi_{i,k}}
+\item{delta}{Parameter that controls the weights on the fuzzy classifications pi(i,k)}
 
 \item{perCluster_mv_weights}{If \code{TRUE}, use cluster-specific multi-view weights.
 Otherwise use classic multi-view weights.}
