@@ -23,6 +23,30 @@ automtically based on the number of columns in each matrix.}
 \value{
 Output from either \code{mv_aggregation} or \code{mv_splitting}, according to the \code{type} of algorithm
 specified above.
+
+For the aggregation algorithm, the outputs are as follows:
+\item{merged_clusters }{Matrix providing each pair of merged clusters at each iteration of the algorithm}
+\item{hclust }{Object of class "hclust" to be used for plotting cluster aggregations}
+\item{weights }{Matrix of dimension \code{v} x \code{niterations}, where \code{v} is the number of
+views and \code{niterations} is the number of successive agglomerations, providing the multi-view weights}
+\item{criterion }{Value taken on by the agglomerative criterion at each iteration}
+\item{final_classification }{Final classification of observations using \code{final_K} clusters (obtained by other cutting the
+true at the appropriate level for the aggregation algorithm)}
+\item{final_K }{Number of clusters chosen via model selection by the data-drive slope estimation (DDSE) slope heuristics}
+
+
+For the splitting algorithm, the outputs are as follows:
+\item{split_clusters }{Matrix providing the history of each cluster splitting at 
+each iteration of the algorithm}
+\item{weights }{Matrix of dimension \code{v} x \code{niterations}, where \code{v} is the number of
+views and \code{niterations} is the number of successive agglomerations, providing the multi-view weights}
+\item{criterion }{Value taken on by the splitting criterion at each iteration}
+\item{withnss }{The within sum-of-squares for each cluster at the last iteration}
+\item{ksplit }{Vector identifying which cluster was split at each iteration of the 
+algorithm}
+\item{final_classification }{Final classification of observations using \code{final_K} clusters (obtained by fixing the number 
+of splits in the splitting algorithm)}
+\item{final_K }{Number of clusters chosen via model selection by the data-drive slope estimation (DDSE) slope heuristics}
 }
 \description{
 This is the primary function to run either the agglomeration or splitting version of the multi-view

@@ -76,6 +76,8 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
       geom_point(data = Xplot[which(is.na(Xplot$y)==FALSE),], aes_string(x="x", y="y"), alpha=0.25) + 
       geom_density(data = Xplot[which(is.na(Xplot$y)==TRUE),], aes_string(x="x"), alpha=0.25) + 
       facet_wrap("view", scales="free_y") +
+      xlab("") + ylab("") +
+      labs(caption="Univariate views are represented by density plots, bivariate views by scatterplots,\nand multivariate views by scatterplots of the first two principal components.") +
       theme_bw() 
   } else {
     Xplot$labels <- factor(Xplot$labels)
@@ -86,10 +88,12 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
                    aes_string(x="x", fill="labels", color="labels"), alpha=0.25) + 
       facet_wrap("view", scales="free_y") +
       guides(color=FALSE, fill=FALSE) + 
-      theme_bw() +
-      viridis::scale_color_viridis(discrete=TRUE) + viridis::scale_fill_viridis(discrete=TRUE) 
+      xlab("") + ylab("")+
+      labs(caption="Univariate views are represented by density plots, bivariate views by scatterplots,\nand multivariate views by scatterplots of the first two principal components.") +
+      theme_bw() 
+#    +  viridis::scale_color_viridis(discrete=TRUE) + viridis::scale_fill_viridis(discrete=TRUE) 
   }
-  print(g)
+  return(g)
 }
 
 #TODO: create full example with initial run on K-means algorithm for cluster_init, FKM for fuzzy version
