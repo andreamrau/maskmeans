@@ -106,7 +106,7 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
 #' @param obj Object of class \code{"maskmeans"} resulting from a call to the \code{maskemans}
 #' function
 #' @param type Graphic to be produced: one or more of \code{c("dendrogram", "heights", 
-#' "weights_line", "weights", "criterion", "tree")}.
+#' "weights_line", "weights", "criterion", "tree", "probapost_boxplot")}.
 #' @param ... Additional optional parameters. In particular, for cluster tree plots, the original
 #' multi-view data should be provided in \code{mv_data}.
 #'
@@ -124,6 +124,9 @@ maskmeans_plot <- function(obj,
 
   g <- vector("list", length=0)
 
+  if(!is.null(arg.user$mv_data) & !("tree" %in% type))
+    message("Note: you have included mv_data, but this argument is used only when the 'tree' graph is produced for the splitting algorithm.")
+  
   if("heights" %in% type) { ## The heights of the tree
     if(!"merged_clusters" %in% names(obj)) {
       message("-- dendrogram heights plot is only possible for the aggregation algorithm.")
@@ -172,16 +175,26 @@ maskmeans_plot <- function(obj,
               heatmap_legend_param = list(title = "weights"))
       print(h)
       } else {
-      df <- data.frame(cbind(seq(1, ncol(obj$weights)), t(obj$weights)),
-                       row.names=NULL)
+        if("merged_clusters" %in% names(obj)) {
+          df <- data.frame(cbind(seq(from = max(as.numeric(obj$hclust$labels)), to = 2),
+                                 seq(1, ncol(obj$weights)), t(obj$weights)),
+                           row.names=NULL) 
+        } else {
+          df <- data.frame(cbind(apply(obj$split_clusters, 2, function(x) length(unique(x))),
+                                 seq(1, ncol(obj$weights)), t(obj$weights)),
+                           row.names=NULL) 
+        }
       rownames(df) <- NULL
-      colnames(df) <- c("iteration", as.character(seq(1:nrow(obj$weights))))
+      colnames(df) <- c("Clusters", "iteration", as.character(seq(1:nrow(obj$weights))))
       df <- tidyr::gather_(df, key="view", value="value", 
                            gather_cols=c(as.character(seq(1:nrow(obj$weights)))))
-      g3 <- ggplot(df, aes_string("iteration", "value")) +
+      g3 <- ggplot(df, aes_string("Clusters", "value")) +
         geom_area(aes_string(fill = "view", group = "view")) +
         ylab("weights") +
         viridis::scale_fill_viridis(discrete=TRUE) + theme_bw()
+      if("merged_clusteers" %in% names(obj)) {
+        g3 <- g3 + scale_x_reverse()
+      }
       g[["weights_area"]] <- g3 
     }
   }
@@ -189,17 +202,27 @@ maskmeans_plot <- function(obj,
     if(class(obj$weights) == "list") {
       message("-- weights line plot only available when per-cluster weights are not used.")
     } else {
-      df <- data.frame(cbind(seq(1, ncol(obj$weights)), t(obj$weights)),
-                       row.names=NULL)
+      if("merged_clusters" %in% names(obj)) {
+        df <- data.frame(cbind(seq(from = max(as.numeric(obj$hclust$labels)), to = 2),
+                               seq(1, ncol(obj$weights)), t(obj$weights)),
+                         row.names=NULL) 
+      } else {
+        df <- data.frame(cbind(apply(obj$split_clusters, 2, function(x) length(unique(x))),
+                               seq(1, ncol(obj$weights)), t(obj$weights)),
+                         row.names=NULL) 
+      }
       rownames(df) <- NULL
-      colnames(df) <- c("iteration", as.character(seq(1:nrow(obj$weights))))
+      colnames(df) <- c("Clusters", "iteration", as.character(seq(1:nrow(obj$weights))))
       df <- tidyr::gather_(df, key="view", value="value", 
                            gather_cols=c(as.character(seq(1:nrow(obj$weights)))))
-      g4 <- ggplot(df, aes_string("iteration", "value", group = "view", colour = "view")) +
+      g4 <- ggplot(df, aes_string("Clusters", "value", group = "view", colour = "view")) +
         geom_point() +
         geom_line(aes_string(lty = "view")) +
         ylab("weights") +
         viridis::scale_color_viridis(discrete=TRUE) + theme_bw()
+      if("merged_clusteers" %in% names(obj)) {
+        g4 <- g4 + scale_x_reverse()
+      }
       g[["weights_line"]] <- g4
     }
   }
@@ -243,6 +266,14 @@ maskmeans_plot <- function(obj,
       g[["tree"]] <- c
     }
   }
+  if("probapost_boxplot" %in% type) {
+    if(is.null(obj$final_probapost)) {
+      message("-- probapost_boxplot is only possible for posterior probabilities from fuzzy aggregation/splitting algorithms")
+    } else {
+      pbox <- probapost_boxplot(obj$final_probapost)
+      g[["probapost_boxplot"]] <- pbox
+    }
+  }
   if(length(g) > 1) {
     print(cowplot::plot_grid(plotlist=g))
   } else {
@@ -257,14 +288,17 @@ probapost_boxplot <- function(probapost) {
   aux <- data.frame(probamax = apply(probapost, 1, max),
                     lab = as.factor(apply(probapost, 1, which.max)))
   p <- ggplot(aux, aes_string(x = "lab", y = "probamax")) +
-    geom_boxplot()
-  print(p)
+    xlab("Cluster") +
+    ylab("Maximum posterior probability") +
+    geom_boxplot() +
+    theme_bw()
+    return(p)
 }
 
 ## Not exported:
 probapost_threshold <- function(obj, probapost, threshold = 0.8) {
   aux <- NULL
-  for (k in 2:length(obj$criteiron)) {
+  for (k in 2:length(obj$criterion)) {
     aux <- c(aux, sum(apply(
       cutreeNewProbapost(obj$hclust, K=k, probapost)$probapost, 1, max) > threshold) * 100 / 
         nrow(probapost))

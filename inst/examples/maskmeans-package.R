@@ -82,6 +82,7 @@ all.equal(hard_split$withinss, hard_split_old$withinss,
 ## Test 4: hard clustering splitting with per-weights
 #**************************************
 set.seed(12345)
+cluster_init <- kmeans(Xlist[[1]], 10)$cluster
 hard_split_perCluster <- maskmeans(mv_data=X, mv=mv, 
                                    clustering_init=cluster_init, type = "splitting", 
                                    Kmax=20, perCluster_mv_weights=TRUE, gamma=1) 

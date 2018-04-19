@@ -12,7 +12,7 @@ maskmeans_plot(obj, type = c("dendrogram", "heights", "weights_line",
 function}
 
 \item{type}{Graphic to be produced: one or more of \code{c("dendrogram", "heights", 
-"weights_line", "weights", "criterion", "tree")}.}
+"weights_line", "weights", "criterion", "tree", "probapost_boxplot")}.}
 
 \item{...}{Additional optional parameters. In particular, for cluster tree plots, the original
 multi-view data should be provided in \code{mv_data}.}
