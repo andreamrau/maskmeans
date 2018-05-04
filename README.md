@@ -27,9 +27,3 @@ There are also two main plotting functions:
 - `maskmeans_plot`, to plot results of the `maskmeans` function. Plot types provided through this function include `type =  c("dendrogram", "heights", "weights_line", "weights", "criterion", "tree")`
 
 See the package [vignette](https://github.com/andreamrau/maskmeans/blob/master/vignettes/maskmeans.Rmd) for a full example and description. If the package was installed with the built vignette above, it may be accessed after loading the package via  `vignette("maskmeans")`.
-
-
-Remaining issues:
-- Better labels for height and dendrogram plot?
-- Cathy's comment: "Enlever dans le .pdf la section 2.2 qui ne fonctionne pas" (wrt hard_agglom, poids identiques par classe)
-- Tree diagram: Remove repetitions? (to easy how to read it), viz idea for per-cluster weights on the side
