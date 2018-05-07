@@ -4,7 +4,8 @@
 \alias{mv_aggregation}
 \title{Aggregation of hard or fuzzy clusters based on multi-view data}
 \usage{
-mv_aggregation(X, mv, clustering_init, gamma = 2, use_mv_weights = TRUE)
+mv_aggregation(X, mv, clustering_init, gamma = 2, use_mv_weights = TRUE,
+  verbose = TRUE)
 }
 \arguments{
 \item{X}{Matrix of multi-view data, where the first view corresponds to the 
@@ -21,6 +22,8 @@ of fuzzy classification labels (For fuzzy clustering)}
 
 \item{use_mv_weights}{If \code{TRUE}, run algorithm in weighted multi-view mode; if FALSE, the
 weight for each view is set to be equal. This option is only used for hard clustering.}
+
+\item{verbose}{If \code{TRUE}, provide verbose output}
 }
 \value{
 \item{merged_clusters }{Matrix providing each pair of merged clusters at each iteration of the algorithm}

@@ -3,7 +3,7 @@
 #' Brief description of package ...
 #'
 #' \tabular{ll}{ Package: \tab maskmeans\cr Type: \tab Package\cr Version:
-#' \tab 0.0.2\cr Date: \tab 2018-04-04\cr License: \tab GPL (>=3)\cr LazyLoad:
+#' \tab 0.0.4\cr Date: \tab 2018-05-04\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 #' \tab yes\cr }
 #'
 #' @name coseq-package
@@ -43,6 +43,7 @@ NULL
 #' automtically based on the number of columns in each matrix.
 #' @param clustering_init Initial hard or fuzzy clustering to be used for aggregating or splitting clusters.
 #' @param type Either \code{"splitting"} or \code{"aggregation"}.
+#' @param verbose If \code{TRUE}, provide verbose output.
 #' @param ... Additional optional parameters.
 #'
 #' @return Output from either \code{mv_aggregation} or \code{mv_splitting}, according to the \code{type} of algorithm
@@ -74,7 +75,7 @@ NULL
 #' 
 #' @export
 #' @example /inst/examples/maskmeans-package.R
-maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
+maskmeans <- function(mv_data, clustering_init, type = "splitting", verbose=TRUE, ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
   arg.user <- list(gamma=2, use_mv_weights=TRUE, Kmax=NULL, perCluster_mv_weights=FALSE, mv=NULL)
@@ -106,7 +107,8 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
   ## Feed into appropriate algorithm
   if(type == "aggregation") {
     mv_run <- mv_aggregation(X=X, mv=arg.user$mv, clustering_init=clustering_init, 
-                             gamma = arg.user$gamma, use_mv_weights = arg.user$use_mv_weights)
+                             gamma = arg.user$gamma, use_mv_weights = arg.user$use_mv_weights,
+                             verbose=verbose)
     if(length(mv_run$hclust$labels[-1]) < 10) {
       message("DDSE for model selection is only possible if at least 10 cluster merges are performed.\nYou can use maskmeans::cutreeNew() to cut the tree at a specific value of K if desired.")
       final_classification <- NULL
@@ -124,7 +126,8 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", ...) {
     mv_run <- mv_splitting(X=X, mv=arg.user$mv, clustering_init=clustering_init,
                            Kmax=arg.user$Kmax, gamma=arg.user$gamma, 
                            use_mv_weights = arg.user$use_mv_weights,
-                           perCluster_mv_weights = arg.user$perCluster_mv_weights)
+                           perCluster_mv_weights = arg.user$perCluster_mv_weights,
+                           verbose=verbose)
     if(is.null(mv_run$split_clusters)) { #TODO Model selection for fuzzy probapost
       final_classification <- final_probapost <- final_K <- NA
     } else if(length(apply(mv_run$split_clusters, 2, max)) < 10) {

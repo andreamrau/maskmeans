@@ -357,55 +357,55 @@ FuzzyKmeansaux<-function(X,w,gamma,delta, ksplit, Pik, K,niter){
   return(list(Pinew=Pinew,centersNew=centersNew,CRIT=CRIT))  
 }
 
-
-#######################
-##   exploitation de l'historique du splitting 
-##  la matrice Msplit explique sur chaque ligne la répartition des classes 
-##  (1ere ligne le nb classes totales 1 à Kmax   jusqu'à sur la dernière ligne la répartition en 1:Kinit classes)
-
-MatrixKsplit<-function(ksplit,Kmax){
-  Kref=Kmax
-  Msplit=matrix(rep(1:Kref,2),nrow=2,byrow=T)
-  iter=length(ksplit)
-  while(iter>0){
-  I=c(Kref,which(Msplit[nrow(Msplit)-1,]==Kref))
-  Msplit[nrow(Msplit),I] = ksplit[iter]
-  iter=iter-1
-  Kref=Kref-1
-  Msplit=rbind(Msplit,Msplit[nrow(Msplit),])
-  }
-  return(Msplit[-nrow(Msplit),])
-}
-
-
-########################
-##   Extraction des probapost dans une étape de l'arbre du splitting
-##
-##   Entrée : la matrice finale des probapost, le ksplit et Kref=le nb de classes que l'on souhaite
-
-ProbapostKref<-function(probapost,ksplit,Kref){
-  Kmax=ncol(probapost)
-  Msplit=MatrixKsplit(ksplit,Kmax)
-  I=which(apply(Msplit,1,max)==Kref)    # la ligne de Msplit qui contient la répartition des Kmax classes en Kref classes
-  probapostextract=matrix(0,nrow=nrow(probapost),ncol=Kref)
-  for (k in 1:Kref)
-    probapostextract[,k]=apply(probapost[,which(Msplit[I,]==k),drop=F],1,sum)
-  
-  return(probapostextract)
-}
-
-########################
-##  Extraction classification par MAP complete ou "smooth"
-##
-##  Entrée : matrice de probapost, seuil (par défaut 0.8)
-
-MAPsmooth<-function(probapost,seuil=0.8){
-  if (seuil<1 & 0<=seuil){
-  label=rep(0,nrow(probapost))
-  label=apply(probapost,1,which.max) * (apply(probapost,1,max)>seuil) 
-  return(label)
-  }
-  else{cat("Error for threshold value")}
-}
-
-
+# 
+# #######################
+# ##   exploitation de l'historique du splitting 
+# ##  la matrice Msplit explique sur chaque ligne la répartition des classes 
+# ##  (1ere ligne le nb classes totales 1 à Kmax   jusqu'à sur la dernière ligne la répartition en 1:Kinit classes)
+# 
+# MatrixKsplit<-function(ksplit,Kmax){
+#   Kref=Kmax
+#   Msplit=matrix(rep(1:Kref,2),nrow=2,byrow=T)
+#   iter=length(ksplit)
+#   while(iter>0){
+#   I=c(Kref,which(Msplit[nrow(Msplit)-1,]==Kref))
+#   Msplit[nrow(Msplit),I] = ksplit[iter]
+#   iter=iter-1
+#   Kref=Kref-1
+#   Msplit=rbind(Msplit,Msplit[nrow(Msplit),])
+#   }
+#   return(Msplit[-nrow(Msplit),])
+# }
+# 
+# 
+# ########################
+# ##   Extraction des probapost dans une étape de l'arbre du splitting
+# ##
+# ##   Entrée : la matrice finale des probapost, le ksplit et Kref=le nb de classes que l'on souhaite
+# 
+# ProbapostKref<-function(probapost,ksplit,Kref){
+#   Kmax=ncol(probapost)
+#   Msplit=MatrixKsplit(ksplit,Kmax)
+#   I=which(apply(Msplit,1,max)==Kref)    # la ligne de Msplit qui contient la répartition des Kmax classes en Kref classes
+#   probapostextract=matrix(0,nrow=nrow(probapost),ncol=Kref)
+#   for (k in 1:Kref)
+#     probapostextract[,k]=apply(probapost[,which(Msplit[I,]==k),drop=F],1,sum)
+#   
+#   return(probapostextract)
+# }
+# 
+# ########################
+# ##  Extraction classification par MAP complete ou "smooth"
+# ##
+# ##  Entrée : matrice de probapost, seuil (par défaut 0.8)
+# 
+# MAPsmooth<-function(probapost,seuil=0.8){
+#   if (seuil<1 & 0<=seuil){
+#   label=rep(0,nrow(probapost))
+#   label=apply(probapost,1,which.max) * (apply(probapost,1,max)>seuil) 
+#   return(label)
+#   }
+#   else{cat("Error for threshold value")}
+# }
+# 
+# 

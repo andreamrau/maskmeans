@@ -10,6 +10,7 @@
 #' of fuzzy classification labels (For fuzzy clustering)
 #' @param use_mv_weights If \code{TRUE}, run algorithm in weighted multi-view mode; if FALSE, the
 #' weight for each view is set to be equal. This option is only used for hard clustering.
+#' @param verbose If \code{TRUE}, provide verbose output
 #'
 #' @return
 #' \item{merged_clusters }{Matrix providing each pair of merged clusters at each iteration of the algorithm}
@@ -19,7 +20,7 @@
 #' \item{criterion }{Value taken on by the agglomerative criterion at each iteration}
 #' @export
 #'
-mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRUE) {
+mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRUE, verbose=TRUE) {
   
   if(gamma < 1) stop("gamma must be greater than or equal to 1.")
   mode <- ifelse(is.vector(clustering_init), "hard", "fuzzy")
@@ -108,6 +109,9 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
     # Index of two classes to aggregate
     indice <-
       c(which(colnames(D) == aggreg[compt, 1]), which(colnames(D) == aggreg[compt, 2]))
+    if(verbose) {
+      cat("  => Aggregating clusters", aggreg[compt, 1], "and", aggreg[compt, 2], "\n")
+    }
     
     # Creation of a new row/column for fusion column
     D <- rbind(D, t(rep(0, ncol(D))))

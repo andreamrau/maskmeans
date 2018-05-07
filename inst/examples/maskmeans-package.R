@@ -59,6 +59,7 @@ all.equal(fuzzy_agglom$merged_clusters, fuzzy_agglom_old$merge)
 ## Test 3: hard clustering splitting
 #**************************************
 set.seed(12345)
+cluster_init <- kmeans(Xlist[[1]], 5)$cluster
 hard_split <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init, 
                         type = "splitting", Kmax=20,
                         perCluster_mv_weights = FALSE)  
@@ -70,7 +71,7 @@ hard_split_old <- maskmeans:::splittingClusters(X=X_scale, mv=mv, gamma=gamma,
 
 all.equal(hard_split$weights, hard_split_old$weights, 
           check.attributes = FALSE) 
-all.equal(hard_split$criterion, hard_split_old$CRIT)                         
+all.equal(hard_split$criterion, hard_split_old$CRIT[-1])                         
 all.equal(hard_split$split_clusters, hard_split_old$clustersplithist)          
 all.equal(hard_split$ksplit, hard_split_old$ksplit, 
           check.attributes = FALSE)                             
@@ -94,7 +95,7 @@ hard_split_old_perCluster <- maskmeans:::splittingClustersbis(X=X_scale, mv=mv, 
 ## Note: these are not identical as there was an error in the original code
 mapply(all.equal, hard_split_perCluster$weights, hard_split_old_perCluster$weights, 
        check.attributes = FALSE)             
-all.equal(hard_split_perCluster$criterion, hard_split_old_perCluster$CRIT)                        
+all.equal(hard_split_perCluster$criterion, hard_split_old_perCluster$CRIT[-1])                        
 all.equal(hard_split_perCluster$split_clusters, 
           hard_split_old_perCluster$clustersplithist)     
 all.equal(hard_split_perCluster$ksplit, hard_split_old_perCluster$ksplit, 
@@ -118,7 +119,6 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
   fuzzy_split_old <- maskmeans:::splittingProbapost(X=X_scale, mv=mv,
                                                     gamma=gamma, delta=2, Kmax=7, 
                                                     probapost.init=proba_init)
-  ## TODO: NOT QUITE EQUAL?
   all.equal(fuzzy_split$weights, fuzzy_split_old$weights,
             check.attributes=FALSE)
   all.equal(fuzzy_split$criterion, fuzzy_split_old$CRIT)
@@ -132,7 +132,6 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
 ## Test 6: fuzzy clustering splitting with per-weights
 #**************************************
 \dontrun{
-  
   set.seed(12345)
   fuzzy_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                                       type = "splitting", gamma=gamma, delta = 2,
@@ -144,7 +143,6 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
              check.attributes=FALSE)
   all.equal(fuzzy_split_perCluster$criterion, fuzzy_split_old_perCluster$CRIT)           
   all.equal(fuzzy_split_perCluster$probapost, fuzzy_split_old_perCluster$probapost)
-  
 }
 
 #**************************************
