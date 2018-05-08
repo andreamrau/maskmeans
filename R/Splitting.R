@@ -129,7 +129,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
   # Calculate general criterion
   CRIT <- c(CRIT, sum(varclass)) 
   ksplit_save <- NULL
-  if(mode == "fuzzy") cluster <- cluster_init
+  cluster <- cluster_init
   
   ## Start splitting loop
   iter <- 1
@@ -159,9 +159,15 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
           #       A <- rbind(A, (w$weightsmv[max(nbcluster), ] ^ (gamma / 2)) * X[I[i], ])
         } 
       }
-      a <- kmeans(A, centers = 2, nstart = 50, iter.max = 50)        
-      J1 <- which(a$cluster == 1)
-      J2 <- which(a$cluster == 2)
+      if(length(I) > 2) {
+        a <- kmeans(A, centers = 2, nstart = 50, iter.max = 50)        
+        J1 <- which(a$cluster == 1)
+        J2 <- which(a$cluster == 2)
+      } else {
+        J1 <- 1
+        J2 <- 2
+        a<- list(cluster = c(1,2))
+      }
       
       # Update centers
       centers[c(ksplit, nrow(centers)+1),] <- 
@@ -304,12 +310,17 @@ mv_weights_perCluster <- function(X, mv, centers, cluster, gamma, mode, delta=NU
       }
     }
     if (gamma > 1) {
-      aux = aux ^ (1 / (1 - gamma))
-      aux = aux / sum(aux)
+      if(sum(aux) != 0) {
+        aux = aux ^ (1 / (1 - gamma))
+        
+        aux = aux / sum(aux)
+      }
     }
     if (gamma == 1) {
-      aux = aux ^ (-1)
-      aux = aux / sum(aux)
+      if(sum(aux) != 0) {
+        aux = aux ^ (-1)
+        aux = aux / sum(aux)
+      }
     }
     aux1 <- NULL
     for (j in 1:length(mv))
