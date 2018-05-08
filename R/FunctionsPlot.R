@@ -29,7 +29,7 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
   if((is.matrix(mv_data) | is.data.frame(mv_data)) & is.null(arg.user$mv))
     stop("If multi-view data are provided as a matrix, the dimension of each view must be specified in mv.")
   if(is.list(mv_data) & !is.data.frame(mv_data)) {
-    arg.user$mv <- lapply(mv_data, ncol)
+    arg.user$mv <- unlist(lapply(mv_data, ncol))
     ## Sanity check on dimensions
     nr <- unlist(lapply(mv_data, nrow))
     if(sum(diff(nr))) stop("All views must be measured on the same set of observations.")
@@ -96,8 +96,6 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
   return(g)
 }
 
-#TODO: create full example with initial run on K-means algorithm for cluster_init, FKM for fuzzy version
-
 #' Plot results of the multi-view aggregation/splitting K-means algorithm
 #'
 #' Produce a variety of plots after running the multi-view aggregation or splitting
@@ -107,14 +105,13 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
 #' function
 #' @param type Graphic to be produced: one or more of \code{c("dendrogram", "heights", 
 #' "weights_line", "weights", "criterion", "tree", "probapost_boxplot")}.
-#' @param ... Additional optional parameters. In particular, for cluster tree plots, the original
-#' multi-view data should be provided in \code{mv_data}.
+#' @param ... Additional optional parameters. 
 #'
 #' @return List of one or more ggplot2 objects.
 #' @export
 maskmeans_plot <- function(obj, 
                            type = c("dendrogram", "heights", "weights_line", 
-                                    "weights", "criterion", "tree"), ...) {
+                                    "weights", "criterion", "tree", "tree_perClusterWeights"), ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
   arg.user <- list(mv_data=NULL, edge_arrow=TRUE)
@@ -124,8 +121,8 @@ maskmeans_plot <- function(obj,
 
   g <- vector("list", length=0)
 
-  if(!is.null(arg.user$mv_data) & !("tree" %in% type))
-    message("Note: you have included mv_data, but this argument is used only when the 'tree' graph is produced for the splitting algorithm.")
+#  if(!is.null(arg.user$mv_data) & !("tree" %in% type))
+#    message("Note: you have included mv_data, but this argument is used only when the 'tree' graph is produced for the splitting algorithm.")
   
   if("heights" %in% type) { ## The heights of the tree
     if(!"merged_clusters" %in% names(obj)) {
@@ -186,7 +183,7 @@ maskmeans_plot <- function(obj,
         }
       rownames(df) <- NULL
       colnames(df) <- c("Clusters", "iteration", as.character(seq(1:nrow(obj$weights))))
-      df <- tidyr::gather_(df, key="view", value="value", 
+      df <- tidyr::gather_(df, key_col="view", value_col="value", 
                            gather_cols=c(as.character(seq(1:nrow(obj$weights)))))
       g3 <- ggplot(df, aes_string("Clusters", "value")) +
         geom_area(aes_string(fill = "view", group = "view")) +
@@ -213,57 +210,56 @@ maskmeans_plot <- function(obj,
       }
       rownames(df) <- NULL
       colnames(df) <- c("Clusters", "iteration", as.character(seq(1:nrow(obj$weights))))
-      df <- tidyr::gather_(df, key="view", value="value", 
+      df <- tidyr::gather_(df, key_col="view", value_col="value", 
                            gather_cols=c(as.character(seq(1:nrow(obj$weights)))))
       g4 <- ggplot(df, aes_string("Clusters", "value", group = "view", colour = "view")) +
         geom_point() +
         geom_line(aes_string(lty = "view")) +
         ylab("weights") +
         viridis::scale_color_viridis(discrete=TRUE) + theme_bw()
-      if("merged_clusteers" %in% names(obj)) {
+      if("merged_clusters" %in% names(obj)) {
         g4 <- g4 + scale_x_reverse()
       }
       g[["weights_line"]] <- g4
     }
   }
-  if("tree" %in% type) {
-    if(is.null(arg.user$mv_data)) 
-      stop("mv_data must be provided as a matrix or list for tree plot.")
+  if("tree" %in% type & !"merged_clusters" %in% names(obj)) {
     if("merged_clusters" %in% names(obj)) {
       message("-- tree plot is only possible for the splitting algorithm.")
     } else {
-      ## Format data: X, mv
-      X <- arg.user$mv_data
-      if(is.list(arg.user$mv_data) & !is.data.frame(arg.user$mv_data)) {
-        ## Sanity check on dimensions
-        nr <- unlist(lapply(arg.user$mv_data, nrow))
-        if(sum(diff(nr))) stop("All views must be measured on the same set of observations.")
-        ## Sanity check on rownames ? TODO
-        X <- do.call("cbind", arg.user$mv_data)
-        colnames(X) <- unlist(lapply(arg.user$mv_data, colnames))
-        rownames(X) <- rownames(arg.user$mv_data[[1]])
-      }
-      if(is.data.frame(arg.user$mv_data)) {
-        X <- as.matrix(arg.user$mv_data)
-        rownames(X) <- rownames(arg.user$mv_data)
-        colnames(X) <- colnames(arg.user$mv_data)
-      }
       aux <- obj$split_clusters
       colnames(aux) <- paste0("K", apply(aux, 2, max))
-      #      dataPlot <- cbind(X, aux[,ncol(aux):1])
-      dataPlot <- cbind(X, aux)
-      c <- clustree::clustree(data.frame(dataPlot), prefix = "K", 
+      aux <- data.frame(aux)
+      aux$color <- 0
+      c <- clustree::clustree(aux, prefix = "K", 
                               edge_arrow=arg.user$edge_arrow,
-                              #  node_colour="#26828EFF",
                               scale_node_text=FALSE,
-                              node_size_range=c(3,10),
-                              edge_width = 1.5)  +
+                              node_size_range=c(5,5),
+                              edge_width = 0.5,
+                              node_colour = "color",
+                              node_colour_aggr="mean")  +
         guides(edge_colour = FALSE, edge_alpha = FALSE) +
         theme(legend.position = "none") +
-        scale_edge_color_continuous(low = "grey10", high = "grey30") +
-        scale_color_viridis(discrete=TRUE, begin = 0.3, end = .9) 
- #     print(c)
-      g[["tree"]] <- c
+        scale_edge_color_continuous(low = "grey10", high = "grey30") 
+      
+      cmod <- c
+      cmod_data <- cmod$data
+      cmod_data$K <- as.numeric(as.character(cmod_data$K))
+      for(Kval in cmod_data$K) {
+        if(Kval == min(cmod_data$K)) next;
+        index  <- which(cmod_data$K == Kval)
+        index_prev  <- which(cmod_data$K == Kval-1)
+        drop_index <- which(cmod_data$x[index] %in% cmod_data$x[index_prev])
+        cmod_data[index[drop_index],]$size <- 0
+      }
+      cmod_data$K <- factor(cmod_data$K)
+      cmod_data$mean_color <- ifelse(cmod_data$size == 0, 0, 1)
+      cmod_data$mean_color <- factor(cmod_data$mean_color)
+      cmod$data <- cmod_data
+      cmod <- cmod +
+        scale_color_manual(values = c("white", "#21908CFF"))
+
+      g[["tree"]] <- cmod
     }
   }
   if("probapost_boxplot" %in% type) {
@@ -274,6 +270,88 @@ maskmeans_plot <- function(obj,
       g[["probapost_boxplot"]] <- pbox
     }
   }
+  
+  if("tree_perClusterWeights" %in% type) {
+    if("merged_clusters" %in% names(obj)) {
+      message("-- tree plot is only possible for the splitting algorithm.")
+    } else if(!is.list(obj$weights)) {
+      message("-- tree plot is only possible for the splitting algorithm with per-cluster weights.")
+    } else {
+      ## First plot tree
+      aux <- obj$split_clusters
+      colnames(aux) <- paste0("K", apply(aux, 2, max))
+      aux <- data.frame(aux)
+      aux$color <- 0
+      c <- clustree::clustree(aux, prefix = "K", 
+                              edge_arrow=arg.user$edge_arrow,
+                              scale_node_text=FALSE,
+                              node_size_range=c(5,5),
+                              edge_width = 0.5,
+                              node_colour = "color",
+                              node_colour_aggr="mean")  +
+        guides(edge_colour = FALSE, edge_alpha = FALSE) +
+        theme(legend.position = "none") +
+        scale_edge_color_continuous(low = "grey10", high = "grey30") 
+      cmod <- c
+      cmod_data <- cmod$data
+      cmod_data$K <- as.numeric(as.character(cmod_data$K))
+      for(Kval in cmod_data$K) {
+        if(Kval == min(cmod_data$K)) next;
+        index  <- which(cmod_data$K == Kval)
+        index_prev  <- which(cmod_data$K == Kval-1)
+        drop_index <- which(cmod_data$x[index] %in% cmod_data$x[index_prev])
+        cmod_data[index[drop_index],]$size <- 0
+      }
+      cmod_data$K <- factor(cmod_data$K)
+      cmod_data$mean_color <- ifelse(cmod_data$size == 0, 0, 1)
+      cmod_data$mean_color <- factor(cmod_data$mean_color)
+      cmod$data <- cmod_data
+      cmod <- cmod +
+        scale_color_manual(values = c("white", "#21908CFF"))
+      
+      ## Now plot weights of split clusters
+      w <- obj$weights[-1]
+      names(w) <- levels(cmod$data$K)[-1]
+      for(i in 1:length(w)) {
+        tmp <- cmod_data[which(cmod_data$K == names(w)[i]),]
+        clus_choice <- tmp[which(tmp$size != 0),]$cluster
+        w[[i]] <- w[[i]][clus_choice,]
+        rownames(w[[i]]) <- paste0("K=",clus_choice)
+      }
+      w <- do.call("rbind", w)
+      colnames(w) <- 1:ncol(w)
+      wdf <- data.frame(w, row.names=NULL, check.names=FALSE)
+      wdf$cluster <- rownames(w)
+      wdf$level <- as.numeric(rep(unique(cmod$data$y)[-1], each = 2))
+      wdf$ymin <- wdf$level + c(-.4, 0)
+      wdf$ymax <- wdf$level + c(0, 0.4)
+      wdf$ymid <- wdf$level + c(-0.2, 0.2)
+
+      wdf_long <- gather_(wdf, key_col="View", value_col="weight", 
+                          gather_cols = c(as.character(1:ncol(w))))
+      wdf_long$View <- as.numeric(as.character(wdf_long$View))
+      wdf_long$xmin <- wdf_long$View - 0.5
+      wdf_long$xmax <- wdf_long$View + 0.5
+      wdf_long$Viewname <- paste0("View ", wdf_long$View)
+      ym <- max(wdf_long$ymax) + 0.5
+      wp <- ggplot(wdf_long, aes_string(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax")) +
+        geom_rect(aes_string(fill="weight")) +
+        geom_text(aes_string(label="cluster", x=0, y="ymid")) +
+        geom_text(aes_string(label="Viewname", x="View", y=ym)) +
+        theme(axis.title=element_blank(),
+              axis.text=element_blank(),
+              axis.ticks=element_blank(),
+              axis.line = element_blank()) + 
+        ylim(c(min(cmod$data$y)-0.5, max(cmod$data$y))) +
+        scale_fill_viridis()
+      cmod2 <- cowplot::plot_grid(plotlist=list(cmod+ 
+                                         ylim(c(min(cmod$data$y)-0.5, max(cmod$data$y))), wp))
+      
+      g[["tree_perClusterWeights"]] <- cmod2
+    }
+    
+  }
+  
   if(length(g) > 1) {
     print(cowplot::plot_grid(plotlist=g))
   } else {

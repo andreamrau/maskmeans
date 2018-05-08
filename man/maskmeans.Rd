@@ -20,7 +20,7 @@ automtically based on the number of columns in each matrix.}
 
 \item{verbose}{If \code{TRUE}, provide verbose output.}
 
-\item{...}{Additional optional parameters.}
+\item{...}{Additional optional parameters. See \code{?mv_aggregation} and \code{?mv_splitting} for more details.}
 }
 \value{
 Output from either \code{mv_aggregation} or \code{mv_splitting}, according to the \code{type} of algorithm
@@ -40,8 +40,12 @@ true at the appropriate level for the aggregation algorithm)}
 For the splitting algorithm, the outputs are as follows:
 \item{split_clusters }{Matrix providing the history of each cluster splitting at 
 each iteration of the algorithm}
-\item{weights }{Matrix of dimension \code{v} x \code{niterations}, where \code{v} is the number of
-views and \code{niterations} is the number of successive agglomerations, providing the multi-view weights}
+\item{weights }{If \code{perCluster_mv_weights=FALSE}, a matrix of dimension 
+\code{v} x \code{niterations}, where \code{v} is the number of
+views and \code{niterations} is the number of successive agglomerations/splits, providing the multi-view weights. If 
+\code{perCluster_mv_weights=TRUE}, a list of length \code{niterations}, where each element
+of the list corresponds to per-cluster multi-view weights in matrices of dimension \code{K} x \code{v}, where \code{K} is the
+number of clusters at a particular iteration and \code{v} is the number of views}
 \item{criterion }{Value taken on by the splitting criterion at each iteration}
 \item{withnss }{The within sum-of-squares for each cluster at the last iteration}
 \item{ksplit }{Vector identifying which cluster was split at each iteration of the 
@@ -99,7 +103,7 @@ all.equal(hard_agglom$merged_clusters, hard_agglom_old$merge)
 ## Test 2: fuzzy clustering aggregation
 #**************************************
 set.seed(12345)
-proba_init <- matrix(runif(nrow(X)*5), ncol=5)
+proba_init <- matrix(runif(nrow(X)*20), ncol=20)
 proba_init <- proba_init / rowSums(proba_init)
 fuzzy_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                           type = "aggregation", gamma=gamma) 
@@ -123,15 +127,18 @@ hard_split <- maskmeans(mv_data=X, mv=mv, clustering_init=cluster_init,
 
 set.seed(12345)
 hard_split_old <- maskmeans:::splittingClusters(X=X_scale, mv=mv, gamma=gamma, 
-                                    Kmax=20, cluster.init=cluster_init,
+                             Kmax=20, cluster.init=cluster_init,
                              weightsopt = TRUE, testkmeans = TRUE) 
 
 all.equal(hard_split$weights, hard_split_old$weights, 
           check.attributes = FALSE) 
-all.equal(hard_split$criterion, hard_split_old$CRIT[-1])                         
-all.equal(hard_split$split_clusters, hard_split_old$clustersplithist)          
+all.equal(hard_split$criterion, hard_split_old$CRIT[-1])  
+## Differences just due to label switching
+all.equal(hard_split$split_clusters, hard_split_old$clustersplithist)  
+## Differences just due to label switching
 all.equal(hard_split$ksplit, hard_split_old$ksplit, 
-          check.attributes = FALSE)                             
+          check.attributes = FALSE)  
+## Differences just due to label switching
 all.equal(hard_split$withinss, hard_split_old$withinss, 
           check.attributes = FALSE)     
 
@@ -150,9 +157,11 @@ hard_split_old_perCluster <- maskmeans:::splittingClustersbis(X=X_scale, mv=mv, 
                                                   Kmax=20, cluster.init=cluster_init) 
 
 ## Note: these are not identical as there was an error in the original code
-mapply(all.equal, hard_split_perCluster$weights, hard_split_old_perCluster$weights, 
+mapply(all.equal, hard_split_perCluster$weights, 
+       hard_split_old_perCluster$weights, 
        check.attributes = FALSE)             
-all.equal(hard_split_perCluster$criterion, hard_split_old_perCluster$CRIT[-1])                        
+all.equal(hard_split_perCluster$criterion, 
+          hard_split_old_perCluster$CRIT[-1])                        
 all.equal(hard_split_perCluster$split_clusters, 
           hard_split_old_perCluster$clustersplithist)     
 all.equal(hard_split_perCluster$ksplit, hard_split_old_perCluster$ksplit, 
@@ -165,7 +174,6 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
 ## Test 5: fuzzy clustering splitting
 #**************************************
 \dontrun{
-  
   set.seed(12345)
   proba_init <- matrix(runif(nrow(X)*5), ncol=5)
   proba_init <- proba_init / rowSums(proba_init)
@@ -179,6 +187,7 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
   all.equal(fuzzy_split$weights, fuzzy_split_old$weights,
             check.attributes=FALSE)
   all.equal(fuzzy_split$criterion, fuzzy_split_old$CRIT)
+  ## Columns are not in the same order here but otherwise equal
   all.equal(fuzzy_split$probapost, fuzzy_split_old$probapost)
   
 }
@@ -205,8 +214,10 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
 #**************************************
 ## Other testing idea: using Xlist instead
 #**************************************
+cluster_init <- kmeans(Xlist[[1]], 10)$cluster
 hard_agglom_list <- maskmeans(mv_data=Xlist, clustering_init=cluster_init, 
                          type = "aggregation", gamma=gamma) 
+table(maskmeans_cutree(hard_agglom_list, K=6, clustering_init=cluster_init)$classif)
 
 #**************************************
 ## Plot functions
@@ -215,13 +226,23 @@ hard_agglom_list <- maskmeans(mv_data=Xlist, clustering_init=cluster_init,
 mv_plot(mv_data=sim_6a$data, mv=mv, labels=sim_6a$labels[,1])
 mv_plot(mv_data=sim_1$data, mv=c(2,2,2,2), labels=sim_1$labels[,1])
 mv_plot(mv_data=sim_2$data, mv=c(2,2,2,2), labels=sim_2$labels[,1])
+mv_plot(mv_data=Xlist, labels=sim_6a$labels[,1])
 
-p <- maskmeans_plot(hard_agglom, mv_data = X)
-p <- maskmeans_plot(fuzzy_agglom, mv_data = X)
-# p <- maskmeans_plot(hard_split, mv_data = X, edge_arrow=FALSE)  
-# p <- maskmeans_plot(hard_split_perCluster, mv_data = X, edge_arrow=FALSE)  
-p <- maskmeans_plot(hard_split, type="tree", mv_data=X_scale)  
+p <- maskmeans_plot(hard_agglom)
+p <- maskmeans_plot(fuzzy_agglom)
+p <- maskmeans_plot(hard_split)  
+p <- maskmeans_plot(hard_split, type="tree")  
+p <- maskmeans_plot(hard_split, type="tree", edge_arrow=FALSE)  
+p <- maskmeans_plot(hard_split_perCluster, type="tree")
+p <- maskmeans_plot(hard_split_perCluster, type = "tree_perClusterWeights")
+p <- maskmeans_plot(hard_split_perCluster)
 
+
+## Tree plots look weird here
+\dontrun{
+  p <- maskmeans_plot(fuzzy_split, type = "tree")  
+  p <- maskmeans_plot(fuzzy_split_perCluster)    
+}
 
 
 

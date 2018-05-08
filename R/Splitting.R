@@ -170,7 +170,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
       
       # History of clustering
       if(iter > 1) clustersplithist <- cbind(clustersplithist, clustersplithist[, iter])
-      clustersplithist[I[J1], iter + 1] <- ksplit
+      clustersplithist[I[J1], iter + 1] <- as.numeric(ksplit)
       clustersplithist[I[J2], iter + 1] <- nbcluster    
       #length(varclass) +1      
       
@@ -212,7 +212,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
       
       ## Splitting in annex functions
       A <- .FuzzyKmeansSplit(X=X, mv=mv, gamma=gamma, delta=delta, w=w, ksplit=ksplit,
-                             Pik=cluster[,ksplit], ninit=20, niter=30, K=2)
+                             Pik=cluster[,ksplit], ninit=20, niter=20, K=2)
       
       ## Update centers
       centers[ksplit,] <- A$centersNew[1,]
@@ -436,8 +436,8 @@ probapost_K <- function(probapost, ksplit, K){
   Kmax <- ncol(probapost)
   Msplit <- .MatrixKsplit(ksplit,Kmax)
   I <- which(apply(Msplit,1,max)==K)    # la ligne de Msplit qui contient la répartition des Kmax classes en Kref classes
-  probapostextract <- matrix(0,nrow=nrow(probapost),ncol=Kref)
-  for (k in 1:Kref)
+  probapostextract <- matrix(0,nrow=nrow(probapost),ncol=K)
+  for (k in 1:K)
     probapostextract[,k] <- apply(probapost[,which(Msplit[I,]==k),drop=FALSE],1,sum)
   return(probapostextract)
 }

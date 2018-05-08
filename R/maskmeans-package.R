@@ -6,7 +6,7 @@
 #' \tab 0.0.4\cr Date: \tab 2018-05-04\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 #' \tab yes\cr }
 #'
-#' @name coseq-package
+#' @name maskmeans-package
 #' @aliases maskmeans-package
 #' @docType package
 #' @author Andrea Rau, Cathy Maugis-Rabusseau, Antoine Godichon-Baggioni
@@ -44,7 +44,7 @@ NULL
 #' @param clustering_init Initial hard or fuzzy clustering to be used for aggregating or splitting clusters.
 #' @param type Either \code{"splitting"} or \code{"aggregation"}.
 #' @param verbose If \code{TRUE}, provide verbose output.
-#' @param ... Additional optional parameters.
+#' @param ... Additional optional parameters. See \code{?mv_aggregation} and \code{?mv_splitting} for more details.
 #'
 #' @return Output from either \code{mv_aggregation} or \code{mv_splitting}, according to the \code{type} of algorithm
 #' specified above.
@@ -63,8 +63,12 @@ NULL
 #' For the splitting algorithm, the outputs are as follows:
 #' \item{split_clusters }{Matrix providing the history of each cluster splitting at 
 #' each iteration of the algorithm}
-#' \item{weights }{Matrix of dimension \code{v} x \code{niterations}, where \code{v} is the number of
-#' views and \code{niterations} is the number of successive agglomerations, providing the multi-view weights}
+#' \item{weights }{If \code{perCluster_mv_weights=FALSE}, a matrix of dimension 
+#' \code{v} x \code{niterations}, where \code{v} is the number of
+#' views and \code{niterations} is the number of successive agglomerations/splits, providing the multi-view weights. If 
+#' \code{perCluster_mv_weights=TRUE}, a list of length \code{niterations}, where each element
+#' of the list corresponds to per-cluster multi-view weights in matrices of dimension \code{K} x \code{v}, where \code{K} is the
+#' number of clusters at a particular iteration and \code{v} is the number of views}
 #' \item{criterion }{Value taken on by the splitting criterion at each iteration}
 #' \item{withnss }{The within sum-of-squares for each cluster at the last iteration}
 #' \item{ksplit }{Vector identifying which cluster was split at each iteration of the 
@@ -86,7 +90,7 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", verbose=TRUE
   if((is.matrix(mv_data) | is.data.frame(mv_data)) & is.null(arg.user$mv))
     stop("If multi-view data are provided as a matrix, the dimension of each view must be specified in mv.")
   if(is.list(mv_data) & !is.data.frame(mv_data)) {
-    arg.user$mv <- lapply(mv_data, ncol)
+    arg.user$mv <- unlist(lapply(mv_data, ncol))
     ## Sanity check on dimensions
     nr <- unlist(lapply(mv_data, nrow))
     if(sum(diff(nr))) stop("All views must be measured on the same set of observations.")
@@ -110,7 +114,7 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", verbose=TRUE
                              gamma = arg.user$gamma, use_mv_weights = arg.user$use_mv_weights,
                              verbose=verbose)
     if(length(mv_run$hclust$labels[-1]) < 10) {
-      message("DDSE for model selection is only possible if at least 10 cluster merges are performed.\nYou can use maskmeans::cutreeNew() to cut the tree at a specific value of K if desired.")
+      message("DDSE for model selection is only possible if at least 10 cluster merges are performed.\nYou can use maskmeans_cutree() to cut the tree at a specific value of K if desired.")
       final_classification <- NULL
       final_probapost <- NULL
       final_K <- NULL
@@ -131,7 +135,7 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", verbose=TRUE
     if(is.null(mv_run$split_clusters)) { #TODO Model selection for fuzzy probapost
       final_classification <- final_probapost <- final_K <- NA
     } else if(length(apply(mv_run$split_clusters, 2, max)) < 10) {
-      message("DDSE for model selection is only possible if at least 10 cluster splits are performed.\nYou can use maskmeans_cutreeNew() to cut the tree at a specific value of K if desired.")
+      message("DDSE for model selection is only possible if at least 10 cluster splits are performed.\nYou can use maskmeans_cutree() to cut the tree at a specific value of K if desired.")
       final_classification <- NULL
       final_probapost <- NULL
       final_K <- NULL

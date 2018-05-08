@@ -292,8 +292,6 @@ criterion <- function(X, mv, gamma, weights, cluster, probapost=NULL, mode="hard
   return(varclass_weighted) 
 }
 
-## NOT exported: function to cut tree
-
 #' Cut an aggregation tree from maskmeans output
 #' 
 #' Cut an aggregation tree into several groups after running \code{maskmeans_aggregation} or
@@ -307,7 +305,6 @@ criterion <- function(X, mv, gamma, weights, cluster, probapost=NULL, mode="hard
 #' \item{classif }{Vector of group memberships after cutting tree}
 #' \item{probapost }{Matrix of group posterior probabilities after cutting tree}
 #' @export
-#'
 maskmeans_cutree <- function(obj, K, clustering_init) {
   hclust_obj <- obj$hclust
   cluster <- clustering_init

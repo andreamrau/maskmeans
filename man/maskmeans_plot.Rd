@@ -5,7 +5,7 @@
 \title{Plot results of the multi-view aggregation/splitting K-means algorithm}
 \usage{
 maskmeans_plot(obj, type = c("dendrogram", "heights", "weights_line",
-  "weights", "criterion", "tree"), ...)
+  "weights", "criterion", "tree", "tree_perClusterWeights"), ...)
 }
 \arguments{
 \item{obj}{Object of class \code{"maskmeans"} resulting from a call to the \code{maskemans}
@@ -14,8 +14,7 @@ function}
 \item{type}{Graphic to be produced: one or more of \code{c("dendrogram", "heights", 
 "weights_line", "weights", "criterion", "tree", "probapost_boxplot")}.}
 
-\item{...}{Additional optional parameters. In particular, for cluster tree plots, the original
-multi-view data should be provided in \code{mv_data}.}
+\item{...}{Additional optional parameters.}
 }
 \value{
 List of one or more ggplot2 objects.
