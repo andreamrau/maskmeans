@@ -343,7 +343,8 @@ maskmeans_plot <- function(obj,
               axis.ticks=element_blank(),
               axis.line = element_blank()) + 
         ylim(c(min(cmod$data$y)-0.5, max(cmod$data$y))) +
-        scale_fill_viridis()
+        scale_fill_viridis() + 
+        theme_minimal()
       cmod2 <- cowplot::plot_grid(plotlist=list(cmod+ 
                                          ylim(c(min(cmod$data$y)-0.5, max(cmod$data$y))), wp))
       
