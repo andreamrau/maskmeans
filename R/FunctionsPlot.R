@@ -104,11 +104,9 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
 #' @param obj Object of class \code{"maskmeans"} resulting from a call to the \code{maskemans}
 #' function
 #' @param type Graphic to be produced: one or more of \code{c("dendrogram", "heights", 
-#' "weights_line", "weights", "criterion", "tree", "tree_perClusterWeights", probapost_boxplot")}.
-#' @param tree_type Either \code{"final_K"}, \code{"all"}, or a numerical value for the final
-#' number of clusters for plots of type \code{"tree"} or \code{"tree_perClusterWeights"}.
-#' @param mv_names If desired, a vector of multiview names to be used for the 
-#' \code{tree_perClusterWeights} plot
+#' "weights_line", "weights", "criterion", "tree", "tree_perClusterWeights", "probapost_boxplot")}.
+#' @param tree_type Either \code{"final_K"}, \code{"all"}, or a numerical value for the final number of clusters for plots of type \code{"tree"} or \code{"tree_perClusterWeights"}.
+#' @param mv_names If desired, a vector of multiview names to be used for the \code{tree_perClusterWeights} plot
 #' @param ... Additional optional parameters. 
 #'
 #' @return List of one or more ggplot2 objects.
