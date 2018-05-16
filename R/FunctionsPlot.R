@@ -104,14 +104,21 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
 #' @param obj Object of class \code{"maskmeans"} resulting from a call to the \code{maskemans}
 #' function
 #' @param type Graphic to be produced: one or more of \code{c("dendrogram", "heights", 
-#' "weights_line", "weights", "criterion", "tree", "probapost_boxplot")}.
+#' "weights_line", "weights", "criterion", "tree", "tree_perClusterWeights", probapost_boxplot")}.
+#' @param tree_type Either \code{"final_K"}, \code{"all"}, or a numerical value for the final
+#' number of clusters for plots of type \code{"tree"} or \code{"tree_perClusterWeights"}.
+#' @param mv_names If desired, a vector of multiview names to be used for the 
+#' \code{tree_perClusterWeights} plot
 #' @param ... Additional optional parameters. 
 #'
 #' @return List of one or more ggplot2 objects.
 #' @export
 maskmeans_plot <- function(obj, 
                            type = c("dendrogram", "heights", "weights_line", 
-                                    "weights", "criterion", "tree", "tree_perClusterWeights"), ...) {
+                                    "weights", "criterion", "tree", "tree_perClusterWeights"),
+                           tree_type = "final_K",
+                           mv_names = NULL,
+                           ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
   arg.user <- list(mv_data=NULL, edge_arrow=TRUE)
@@ -227,8 +234,20 @@ maskmeans_plot <- function(obj,
     if("merged_clusters" %in% names(obj)) {
       message("-- tree plot is only possible for the splitting algorithm.")
     } else {
-      aux <- obj$split_clusters
+      if(tree_type == "all") {
+        aux <- obj$split_clusters
+      } else if(tree_type == "final_K") {
+        aux <- obj$split_clusters
+        index <- which(apply(aux, 2, max) <= obj$final_K)
+        aux <- obj$split_clusters[,index]
+      } else {
+        if(!is.numeric(tree_type)) stop("tree_type must be either 'all', 'final_K', or a number.")
+        aux <- obj$split_clusters
+        index <- which(apply(aux, 2, max) <= tree_type)
+        aux <- obj$split_clusters[,index]
+      }
       colnames(aux) <- paste0("K", apply(aux, 2, max))
+      
       aux <- data.frame(aux)
       aux$color <- 0
       c <- clustree::clustree(aux, prefix = "K", 
@@ -278,7 +297,20 @@ maskmeans_plot <- function(obj,
       message("-- tree plot is only possible for the splitting algorithm with per-cluster weights.")
     } else {
       ## First plot tree
-      aux <- obj$split_clusters
+      if(tree_type == "all") {
+        aux <- obj$split_clusters
+        index0 <- 1:ncol(aux)
+      } else if(tree_type == "final_K") {
+        aux <- obj$split_clusters
+        index0 <- which(apply(aux, 2, max) <= obj$final_K)
+        aux <- obj$split_clusters[,index0]
+      } else {
+        if(!is.numeric(tree_type)) stop("tree_type must be either 'all', 'final_K', or a number.")
+        aux <- obj$split_clusters
+        index0 <- which(apply(aux, 2, max) <= tree_type)
+        aux <- obj$split_clusters[,index0]
+        if(class(aux) == "numeric") stop("No splits at the provided value of tree type.")
+      }
       colnames(aux) <- paste0("K", apply(aux, 2, max))
       aux <- data.frame(aux)
       aux$color <- 0
@@ -310,8 +342,9 @@ maskmeans_plot <- function(obj,
         scale_color_manual(values = c("white", "#21908CFF"))
       
       ## Now plot weights of split clusters
-      w <- obj$weights[-1]
-      names(w) <- levels(cmod$data$K)[-1]
+      w <- obj$weights
+      names(w) <- levels(cmod$data$K)
+      w <- w[index0[-1]]
       for(i in 1:length(w)) {
         tmp <- cmod_data[which(cmod_data$K == names(w)[i]),]
         clus_choice <- tmp[which(tmp$size != 0),]$cluster
@@ -327,12 +360,18 @@ maskmeans_plot <- function(obj,
       wdf$ymax <- wdf$level + c(0, 0.4)
       wdf$ymid <- wdf$level + c(-0.2, 0.2)
 
+
       wdf_long <- gather_(wdf, key_col="View", value_col="weight", 
                           gather_cols = c(as.character(1:ncol(w))))
       wdf_long$View <- as.numeric(as.character(wdf_long$View))
       wdf_long$xmin <- wdf_long$View - 0.5
       wdf_long$xmax <- wdf_long$View + 0.5
       wdf_long$Viewname <- paste0("View ", wdf_long$View)
+      if(!is.null(mv_names)) {
+        if(length(mv_names) != ncol(wdf)-5) stop("mv_names must be the same length as the number of views")
+        wdf_long$Viewname <- factor(wdf_long$Viewname)
+        levels(wdf_long$Viewname) <- mv_names
+      }
       ym <- max(wdf_long$ymax) + 0.5
       wp <- ggplot(wdf_long, aes_string(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax")) +
         geom_rect(aes_string(fill="weight")) +
@@ -344,7 +383,7 @@ maskmeans_plot <- function(obj,
               axis.line = element_blank()) + 
         ylim(c(min(cmod$data$y)-0.5, max(cmod$data$y))) +
         scale_fill_viridis() + 
-        theme_minimal()
+          theme_void()
       cmod2 <- cowplot::plot_grid(plotlist=list(cmod+ 
                                          ylim(c(min(cmod$data$y)-0.5, max(cmod$data$y))), wp))
       

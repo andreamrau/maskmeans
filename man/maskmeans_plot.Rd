@@ -5,14 +5,21 @@
 \title{Plot results of the multi-view aggregation/splitting K-means algorithm}
 \usage{
 maskmeans_plot(obj, type = c("dendrogram", "heights", "weights_line",
-  "weights", "criterion", "tree", "tree_perClusterWeights"), ...)
+  "weights", "criterion", "tree", "tree_perClusterWeights"),
+  tree_type = "final_K", mv_names = NULL, ...)
 }
 \arguments{
 \item{obj}{Object of class \code{"maskmeans"} resulting from a call to the \code{maskemans}
 function}
 
 \item{type}{Graphic to be produced: one or more of \code{c("dendrogram", "heights", 
-"weights_line", "weights", "criterion", "tree", "probapost_boxplot")}.}
+"weights_line", "weights", "criterion", "tree", "tree_perClusterWeights", probapost_boxplot")}.}
+
+\item{tree_type}{Either \code{"final_K"}, \code{"all"}, or a numerical value for the final
+number of clusters for plots of type \code{"tree"} or \code{"tree_perClusterWeights"}.}
+
+\item{mv_names}{If desired, a vector of multiview names to be used for the 
+\code{tree_perClusterWeights} plot}
 
 \item{...}{Additional optional parameters.}
 }
