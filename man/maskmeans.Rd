@@ -179,7 +179,7 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
   proba_init <- proba_init / rowSums(proba_init)
   fuzzy_split <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                            type = "splitting", gamma=gamma, delta = 2,
-                           perCluster_mv_weights = FALSE, Kmax = 7) 
+                           perCluster_mv_weights = FALSE, Kmax = 16) 
   set.seed(12345)
   fuzzy_split_old <- maskmeans:::splittingProbapost(X=X_scale, mv=mv,
                                                     gamma=gamma, delta=2, Kmax=7, 
@@ -201,7 +201,7 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
   set.seed(12345)
   fuzzy_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                                       type = "splitting", gamma=gamma, delta = 2,
-                                      perCluster_mv_weights = TRUE, Kmax = 7) 
+                                      perCluster_mv_weights = TRUE, Kmax = 16) 
   set.seed(12345)
   fuzzy_split_old_perCluster <- maskmeans:::splittingProbapostbis(X=X_scale, mv=mv,
      gamma=gamma, delta=2, Kmax=7, probapost.init=proba_init)
@@ -243,6 +243,9 @@ p <- maskmeans_plot(hard_split_perCluster)
   p <- maskmeans_plot(fuzzy_split, type = "tree")  
   p <- maskmeans_plot(fuzzy_split_perCluster)    
 }
+
+## Plot weights in the final splits originating from intial cluster 8 (using final_K)
+s <- split_zoom(hard_split_perCluster, initial_cluster = 8, mv_names = letters[1:6])
 
 
 

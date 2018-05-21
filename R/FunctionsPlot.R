@@ -206,7 +206,7 @@ maskmeans_plot <- function(obj,
         geom_area(aes_string(fill = "view", group = "view")) +
         ylab("weights") +
         viridis::scale_fill_viridis(discrete=TRUE) + theme_bw()
-      if("merged_clusteers" %in% names(obj)) {
+      if("merged_clusters" %in% names(obj)) {
         g3 <- g3 + scale_x_reverse()
       }
       g[["weights"]] <- g3 
@@ -429,6 +429,80 @@ probapost_boxplot <- function(probapost) {
     theme_bw()
     return(p)
 }
+
+
+
+
+
+
+
+#' Plot zoom results of the final weights from the multi-view splitting K-means algorithm
+#'
+#' Produce a plot of the per-cluster weights from the multi-view splitting K-means algorithm for a specified initial cluster value.
+#' 
+#' @param obj Object of class \code{"maskmeans"} resulting from a call to the \code{maskmeans}
+#' function with \code{type = "splitting"} and \code{perCluster_mv_weights = TRUE}.
+#' @param initial_cluster A numerical value indicating the initial cluster for which splits should be visualized.
+#' @param final_K Total number of clusters in selected model. By default, the value in \code{obj$final_K} will be used if it exists, and otherwise the 
+#' maximum number of split clusters will be used.
+#' @param mv_names If desired, a vector of multiview names to be used 
+#' @param ... Additional optional parameters. 
+#'
+#' @return A ggplot2 object
+#' @export
+split_zoom <- function(obj, 
+                        initial_cluster = 1, final_K = NULL,  mv_names = NULL, ...) {
+  ## Parse ellipsis function
+  providedArgs <- list(...)
+  arg.user <- list(mv_data=NULL)
+  arg.user[names(providedArgs)] <- providedArgs
+  
+  if(class(obj) != "maskmeans") stop("This plot function expects an object of class maskmeans.")
+  if("merged_clusters" %in% names(obj)) stop("This plot function expects an object of class maskmeans from the splitting algorithm.")
+  if(!is.list(obj$weights)) stop("This plot function expects an object of class maskmeans from the splitting algorithm with per-cluster multi-view weights.")
+  
+  ## Now plot weights of split clusters
+  aux <- obj$split_clusters
+  if(is.null(final_K)) {
+    if(!is.null(obj$final_K)) {
+      index0 <- which(apply(aux, 2, max) == obj$final_K)
+    } else {
+      index0 <- ncol(aux)
+    }
+  } else if(final_K < max(aux[,1]) | final_K > max(aux[,ncol(aux)])) {
+    stop("The value of final_K does not correspond to one of the splits.")
+  } else {
+    index0 <- which(apply(aux, 2, max) == final_K)
+  }
+  aux0 <- obj$split_clusters[,c(1,index0)]
+  if(length(which(aux0[,1] == initial_cluster))) {
+    aux00 <- unique(aux0[which(aux0[,1] == initial_cluster),2])
+  } else stop("Double-check the value provided for initial_cluster.")
+  
+  
+  w <- obj$weights
+  w_select <- w[[index0]][aux00,]
+  if(is.null(mv_names)) {
+    colnames(w_select) <- paste0("View ", 1:ncol(w_select))
+  } else {
+    if(length(mv_names) != ncol(w_select)) stop("mv_names must be the same length as the number of views")
+    colnames(w_select) <- mv_names
+  }
+  rownames(w_select) <- aux00
+  w_select <- data.frame(w_select, check.names=FALSE)
+  
+  
+  h <- Heatmap(w_select,
+               col = viridis::viridis(21, begin=0, end=1), cluster_rows=FALSE,
+               heatmap_legend_param = list(title="weights"), 
+               row_names_side = "left",
+               column_title=paste0("Splits from original cluster ", initial_cluster, " (K=", max(aux0[,2]), ")"))
+  print(h)
+  return(h)
+}
+
+
+
 
 ## Not exported:
 probapost_threshold <- function(obj, probapost, threshold = 0.8) {

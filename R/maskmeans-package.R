@@ -98,6 +98,7 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", verbose=TRUE
     X <- do.call("cbind", mv_data)
     colnames(X) <- unlist(lapply(mv_data, colnames))
     for(i in 2:length(mv_data)) {
+      if(is.null(rownames(mv_data[[i]]))) next;
       if(!all.equal(rownames(mv_data[[1]]), rownames(mv_data[[i]])))
         warning(paste0("Rownames of view", i, "do not match the first view. Are you sure that rows in each view are in the same order?"))
     }

@@ -183,5 +183,8 @@ p <- maskmeans_plot(hard_split_perCluster)
   p <- maskmeans_plot(fuzzy_split_perCluster)    
 }
 
+## Plot weights in the final splits originating from intial cluster 8 (using final_K)
+s <- split_zoom(hard_split_perCluster, initial_cluster = 8, mv_names = letters[1:6])
+
 
 
