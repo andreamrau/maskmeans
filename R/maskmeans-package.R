@@ -94,9 +94,13 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", verbose=TRUE
     ## Sanity check on dimensions
     nr <- unlist(lapply(mv_data, nrow))
     if(sum(diff(nr))) stop("All views must be measured on the same set of observations.")
-    ## Sanity check on rownames ? TODO
+    ## Sanity check on rownames
     X <- do.call("cbind", mv_data)
     colnames(X) <- unlist(lapply(mv_data, colnames))
+    for(i in 2:length(mv_data)) {
+      if(!all.equal(rownames(mv_data[[1]]), rownames(mv_data[[i]])))
+        warning(paste0("Rownames of view", i, "do not match the first view. Are you sure that rows in each view are in the same order?"))
+    }
     rownames(X) <- rownames(mv_data[[1]])
   }
   if(is.data.frame(mv_data)) {
@@ -132,7 +136,7 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", verbose=TRUE
                            use_mv_weights = arg.user$use_mv_weights,
                            perCluster_mv_weights = arg.user$perCluster_mv_weights,
                            verbose=verbose)
-    if(is.null(mv_run$split_clusters)) { #TODO Model selection for fuzzy probapost
+    if(is.null(mv_run$split_clusters)) {
       final_classification <- final_probapost <- final_K <- NA
     } else if(length(apply(mv_run$split_clusters, 2, max)) < 10) {
       message("DDSE for model selection is only possible if at least 10 cluster splits are performed.\nYou can use maskmeans_cutree() to cut the tree at a specific value of K if desired.")

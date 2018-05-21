@@ -171,9 +171,14 @@ maskmeans_plot <- function(obj,
                    unlist(lapply(obj$weights, function(x) rep(nrow(x), nrow(x)))),
                    rep(1:length(obj$weights), 
                        times = unlist(lapply(obj$weights, nrow))))
-      colnames(tmp) <- c(paste0("View ", 1:(ncol(tmp)-2)), "Cluster", "iteration")
+      if(is.null(mv_names)) {
+        colnames(tmp) <- c(paste0("View ", 1:(ncol(tmp)-2)), "Cluster", "iteration")
+      } else {
+        if(length(mv_names) != ncol(tmp)-2) stop("mv_names must be the same length as the number of views")
+        colnames(tmp) <- c(mv_names, "Cluster", "iteration")
+      }
       h <- Heatmap(tmp[,1:(ncol(tmp)-2)], split=tmp[,"Cluster"],
-              col = viridis::viridis(21, begin=1, end=0), cluster_rows=FALSE,
+              col = viridis::viridis(21, begin=0, end=1), cluster_rows=FALSE,
               heatmap_legend_param = list(title = "weights"))
       print(h)
       } else {
@@ -190,6 +195,13 @@ maskmeans_plot <- function(obj,
       colnames(df) <- c("Clusters", "iteration", as.character(seq(1:nrow(obj$weights))))
       df <- tidyr::gather_(df, key_col="view", value_col="value", 
                            gather_cols=c(as.character(seq(1:nrow(obj$weights)))))
+      
+      if(!is.null(mv_names)) {
+        df$view <- factor(df$view)
+        if(length(mv_names) != length(levels(df$view))) stop("mv_names must be the same length as the number of views")
+        levels(df$view) <- mv_names
+      }
+      
       g3 <- ggplot(df, aes_string("Clusters", "value")) +
         geom_area(aes_string(fill = "view", group = "view")) +
         ylab("weights") +
@@ -197,7 +209,7 @@ maskmeans_plot <- function(obj,
       if("merged_clusteers" %in% names(obj)) {
         g3 <- g3 + scale_x_reverse()
       }
-      g[["weights_area"]] <- g3 
+      g[["weights"]] <- g3 
     }
   }
   if("weights_line" %in% type) {
@@ -217,6 +229,13 @@ maskmeans_plot <- function(obj,
       colnames(df) <- c("Clusters", "iteration", as.character(seq(1:nrow(obj$weights))))
       df <- tidyr::gather_(df, key_col="view", value_col="value", 
                            gather_cols=c(as.character(seq(1:nrow(obj$weights)))))
+      
+      if(!is.null(mv_names)) {
+        df$view <- factor(df$view)
+        if(length(mv_names) != length(levels(df$view))) stop("mv_names must be the same length as the number of views")
+        levels(df$view) <- mv_names
+      }
+      
       g4 <- ggplot(df, aes_string("Clusters", "value", group = "view", colour = "view")) +
         geom_point() +
         geom_line(aes_string(lty = "view")) +
