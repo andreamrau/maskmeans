@@ -225,13 +225,13 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
       I <- which(clustersplithist[,iter] == ksplit)
       
       ## Splitting in annex functions
+      A <- .FuzzyKmeansSplit(X=X, mv=mv, gamma=gamma, delta=delta, w=w, ksplit=ksplit,
+                            Pik=cluster[,ksplit], ninit=20, niter=20, K=2, parallel=parallel,
+                            BPPARAM=BPPARAM)
       ## AR: I think we only want to split the observations from the chosen cluster here
-#      A <- .FuzzyKmeansSplit(X=X, mv=mv, gamma=gamma, delta=delta, w=w, ksplit=ksplit,
-#                             Pik=cluster[,ksplit], ninit=20, niter=20, K=2, parallel=parallel,
+#      A <- .FuzzyKmeansSplit(X=X[I,], mv=mv, gamma=gamma, delta=delta, w=w, ksplit=ksplit,
+#                             Pik=cluster[I,ksplit], ninit=20, niter=20, K=2, parallel=parallel,
 #                             BPPARAM=BPPARAM)
-      A <- .FuzzyKmeansSplit(X=X[I,], mv=mv, gamma=gamma, delta=delta, w=w, ksplit=ksplit,
-                             Pik=cluster[I,ksplit], ninit=20, niter=20, K=2, parallel=parallel,
-                             BPPARAM=BPPARAM)
       
       ## Update centers
       centers[ksplit,] <- A$centersNew[1,]
@@ -241,12 +241,12 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
       
       ## Update posterior probabilities
       ## AR: I think we only want to split the observations from the chosen cluster here
-      # cluster[,ksplit] <- A$Pinew[,1]
-      # cluster <- cbind(cluster, A$Pinew[,2])
-      cluster[I,ksplit] <- A$Pinew[,1]
-      cluster <- cbind(cluster, 0)
-      cluster[I,ncol(cluster)] <- A$Pinew[,2]
+      cluster[,ksplit] <- A$Pinew[,1]
+      cluster <- cbind(cluster, A$Pinew[,2])
       ## AR: Should we divide the conditional probability for observations in unsplit classes between the two new ones?
+#      cluster[I,ksplit] <- A$Pinew[,1]
+#      cluster <- cbind(cluster, 0)
+#      cluster[I,ncol(cluster)] <- A$Pinew[,2]
 #      cluster[-I,ksplit] <- cluster[-I,ncol(cluster)] <- cluster[-I,ksplit]/2
       
       ## Added update of clustering history here
