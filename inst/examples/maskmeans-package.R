@@ -118,7 +118,8 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
   proba_init <- proba_init / rowSums(proba_init)
   fuzzy_split <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                            type = "splitting", gamma=gamma, delta = 2,
-                           perCluster_mv_weights = FALSE, Kmax = 16) 
+                           perCluster_mv_weights = FALSE, Kmax = 16,
+                           verbose=TRUE, parallel=TRUE) 
   set.seed(12345)
   fuzzy_split_old <- maskmeans:::splittingProbapost(X=X_scale, mv=mv,
                                                     gamma=gamma, delta=2, Kmax=7, 
@@ -140,7 +141,8 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
   set.seed(12345)
   fuzzy_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                                       type = "splitting", gamma=gamma, delta = 2,
-                                      perCluster_mv_weights = TRUE, Kmax = 16) 
+                                      perCluster_mv_weights = TRUE, Kmax = 16,
+                                      parallel=TRUE) 
   set.seed(12345)
   fuzzy_split_old_perCluster <- maskmeans:::splittingProbapostbis(X=X_scale, mv=mv,
      gamma=gamma, delta=2, Kmax=7, probapost.init=proba_init)
@@ -175,7 +177,6 @@ p <- maskmeans_plot(hard_split, type="tree", edge_arrow=FALSE)
 p <- maskmeans_plot(hard_split_perCluster, type="tree")
 p <- maskmeans_plot(hard_split_perCluster, type = "tree_perClusterWeights")
 p <- maskmeans_plot(hard_split_perCluster)
-
 
 ## Tree plots look weird here
 \dontrun{

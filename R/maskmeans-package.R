@@ -3,7 +3,7 @@
 #' Brief description of package ...
 #'
 #' \tabular{ll}{ Package: \tab maskmeans\cr Type: \tab Package\cr Version:
-#' \tab 0.0.4\cr Date: \tab 2018-05-04\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
+#' \tab 0.0.7\cr Date: \tab 2018-07-30\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 #' \tab yes\cr }
 #'
 #' @name maskmeans-package
@@ -19,6 +19,7 @@
 #' @importFrom stats hclust cutree prcomp dist rnorm kmeans
 #' @import ggplot2
 #' @import clustree
+#' @import BiocParallel
 #' @importFrom viridis scale_color_viridis scale_fill_viridis
 #' @importFrom ggdendro ggdendrogram
 #' @importFrom tidyr gather_
@@ -44,6 +45,14 @@ NULL
 #' @param clustering_init Initial hard or fuzzy clustering to be used for aggregating or splitting clusters.
 #' @param type Either \code{"splitting"} or \code{"aggregation"}.
 #' @param verbose If \code{TRUE}, provide verbose output.
+#' @param parallel If \code{FALSE}, no parallelization. If \code{TRUE}, parallel
+#' execution using BiocParallel (see next argument \code{BPPARAM}) for the fuzzy splitting algorithm. A note on running
+#' in parallel using BiocParallel: it may be advantageous to remove large, unneeded objects
+#' from the current R environment before calling the function, as it is possible that R's
+#' internal garbage collection will copy these files while running on worker nodes.
+#' @param BPPARAM Optional parameter object passed internally to \code{bplapply} when
+#' \code{parallel=TRUE}. If not specified, the parameters last registered with \code{register}
+#' will be used.
 #' @param ... Additional optional parameters. See \code{?mv_aggregation} and \code{?mv_splitting} for more details.
 #'
 #' @return Output from either \code{mv_aggregation} or \code{mv_splitting}, according to the \code{type} of algorithm
@@ -79,10 +88,10 @@ NULL
 #' 
 #' @export
 #' @example /inst/examples/maskmeans-package.R
-maskmeans <- function(mv_data, clustering_init, type = "splitting", verbose=TRUE, ...) {
+maskmeans <- function(mv_data, clustering_init, type = "splitting", parallel=TRUE, verbose=TRUE, ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
-  arg.user <- list(gamma=2, use_mv_weights=TRUE, Kmax=NULL, perCluster_mv_weights=FALSE, mv=NULL)
+  arg.user <- list(gamma=2, use_mv_weights=TRUE, Kmax=NULL, perCluster_mv_weights=FALSE, mv=NULL, parallel=FALSE, BPPARAM=bpparam())
   arg.user[names(providedArgs)] <- providedArgs
   
   ## Format data: X, mv
@@ -136,7 +145,9 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", verbose=TRUE
                            Kmax=arg.user$Kmax, gamma=arg.user$gamma, 
                            use_mv_weights = arg.user$use_mv_weights,
                            perCluster_mv_weights = arg.user$perCluster_mv_weights,
-                           verbose=verbose)
+                           verbose=verbose,
+                           parallel=arg.user$parallel, 
+                           BPPARAM=arg.user$BPPARAM)
     if(is.null(mv_run$split_clusters)) {
       final_classification <- final_probapost <- final_K <- NA
     } else if(length(apply(mv_run$split_clusters, 2, max)) < 10) {

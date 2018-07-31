@@ -17,6 +17,14 @@
 #' Otherwise use classic multi-view weights.
 #' @param delta Parameter that controls the weights on the fuzzy classifications pi(i,k)
 #' @param verbose If \code{TRUE}, provide verbose output
+#' @param parallel If \code{FALSE}, no parallelization. If \code{TRUE}, parallel
+#' execution using BiocParallel (see next argument \code{BPPARAM}) for the fuzzy splitting algorithm. A note on running
+#' in parallel using BiocParallel: it may be advantageous to remove large, unneeded objects
+#' from the current R environment before calling the function, as it is possible that R's
+#' internal garbage collection will copy these files while running on worker nodes.
+#' @param BPPARAM Optional parameter object passed internally to \code{bplapply} when
+#' \code{parallel=TRUE}. If not specified, the parameters last registered with \code{register}
+#' will be used.
 #'
 #' @return
 #' \item{split_clusters }{Matrix providing the history of each cluster splitting at 
@@ -34,7 +42,7 @@
 mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2, 
                          use_mv_weights = TRUE, delta = 2,
                          perCluster_mv_weights = TRUE,
-                         verbose=TRUE) {
+                         verbose=TRUE, parallel=TRUE, BPPARAM=bpparam()) {
   
   cluster_init <- clustering_init
   
@@ -218,7 +226,8 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
       
       ## Splitting in annex functions
       A <- .FuzzyKmeansSplit(X=X, mv=mv, gamma=gamma, delta=delta, w=w, ksplit=ksplit,
-                             Pik=cluster[,ksplit], ninit=20, niter=20, K=2)
+                             Pik=cluster[,ksplit], ninit=20, niter=20, K=2, parallel=parallel,
+                             BPPARAM=BPPARAM)
       
       ## Update centers
       centers[ksplit,] <- A$centersNew[1,]
@@ -335,40 +344,58 @@ mv_weights_perCluster <- function(X, mv, centers, cluster, gamma, mode, delta=NU
 
 ###  j'ai du mettre plein d'exceptions à cause du cas delta=1 qui mene à des CRIT=NaN
 .FuzzyKmeansSplit <- function(X,mv,gamma,delta,w,ksplit,Pik,ninit=20,
-                              niter=20, K=2) {
+                              niter=20, K=2, parallel=FALSE, BPPARAM=bpparam()) {
   #pour stocker les réponses
   Pinew <- matrix(0,nrow=nrow(X),ncol=K)
   centersNew <- matrix(0,nrow=K,ncol=ncol(X))
   A1 <- .FuzzyKmeansaux(X,w,gamma,delta, ksplit, Pik, K,niter)
-  for(z in 1:ninit) {   #boucle sur le nombre d'essai du fuzzy Kmeans
-    A2 <- .FuzzyKmeansaux(X,w,gamma,delta, ksplit, Pik, K,niter)
-    if(!is.na(A1$CRIT)){
-      if (!is.na(A2$CRIT)){
-        if (A2$CRIT<A1$CRIT){
+  
+  ## Not parallel mode
+  if(!parallel) {
+    for(z in 1:ninit) {   #boucle sur le nombre d'essai du fuzzy Kmeans
+      A2 <- .FuzzyKmeansaux(X,w,gamma,delta, ksplit, Pik, K,niter)
+      if(!is.na(A1$CRIT)){
+        if (!is.na(A2$CRIT)){
+          if (A2$CRIT<A1$CRIT){
+            A1 <- A2
+          }
+        }
+      } else{
+        if(!is.na(A2$CRIT)){
           A1 <- A2
         }
-      }  
-    } else{ 
-      if(!is.na(A2$CRIT)){
-        A1 <- A2
       }
-    }
-  }  
-  Pinew <- A1$Pinew
-  centersNew <- A1$centersNew
+    }  
+    Pinew <- A1$Pinew
+    centersNew <- A1$centersNew
+  } else{
+    ## Parallel mode
+    tmp <- bplapply(1:ninit, 
+                    FUN=function(ii,P_X,P_w,P_gamma,P_delta,P_ksplit,
+                                          P_Pik,P_K,P_niter) {
+      set.seed(ii)
+      res <- .FuzzyKmeansaux(X=P_X,w=P_w,gamma=P_gamma,delta=P_delta,ksplit=P_ksplit,
+                             Pik=P_Pik,K=P_K,niter=P_niter)
+      return(res)
+    }, P_X=X,P_w=w,P_gamma=gamma,P_delta=delta,P_ksplit=ksplit,
+       P_Pik=Pik,P_K=K,P_niter=niter,BPPARAM=BPPARAM)
+    CRIT_all <- unlist(lapply(tmp, function(x) x$CRIT))
+    choose <- which.min(CRIT_all)
+    Pinew <- tmp[[choose]]$Pinew
+    centersNew <- tmp[[choose]]$centersNew
+  }
+
   return(result=list(Pinew= Pinew, centersNew= centersNew))
 }
 
 ## NOT exported: fuzzy K-means auxiliary function with vector of probabilities
-
-.FuzzyKmeansaux <- function(X,w,gamma,delta, ksplit, Pik, K,niter){
+.FuzzyKmeansaux <- function(X, w,gamma,delta, ksplit, Pik, K,niter){
   # Z_i^{(v)} = alpha_v^{gamma/2} X_i^{(v)}
   if (is.vector(w$weights)) {       # même poids par classe (\alpha_v)
     Z <- data.frame(matrix(rep(w$weightsmv^(gamma/2),nrow(X)),nrow=nrow(X),byrow=T) * X)
   } else{       #poids(\alpha_{k,v})
     Z <- data.frame(matrix(rep(w$weightsmv[ksplit,]^(gamma/2),nrow(X)),nrow=nrow(X),byrow=T) * X)  
   }
-  
   #init de stockage des Pinew et centersNew
   Pinew <- matrix(0,nrow=nrow(X),ncol=K)
   centersNew <- matrix(0,nrow=K,ncol=ncol(X))
@@ -378,8 +405,8 @@ mv_weights_perCluster <- function(X, mv, centers, cluster, gamma, mode, delta=NU
   
   #initialisation des centres
   centersNew <- kmeans(X,K)$centers
+  if (delta<= 1)  stop("Error delta value")
   
-  if (delta>1) {
     for(l in 1:niter){
       # Mise à jour des poids
       # for (k in 1:K){  
@@ -427,11 +454,11 @@ mv_weights_perCluster <- function(X, mv, centers, cluster, gamma, mode, delta=NU
     etamat <- eta[rep(1:2, each=nrow(Z)),]
     m <- matrix(rowSums((etamat - Z[rep(1:nrow(Z), 2),])^2), ncol=K)
     CRIT <- sum((Pinew^delta) * m)
-    
-  } else {cat("Error delta value")}
   
   return(list(Pinew=Pinew,centersNew=centersNew,CRIT=CRIT))  
 }
+
+
 
 
 #' Extract the posterior probabilities from a specified step in the splitting tree
