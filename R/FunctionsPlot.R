@@ -113,7 +113,8 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
 #' @export
 maskmeans_plot <- function(obj, 
                            type = c("dendrogram", "heights", "weights_line", 
-                                    "weights", "criterion", "tree", "tree_perClusterWeights"),
+                                    "weights", "criterion", "tree", "tree_perClusterWeights",
+                                    "probapost_boxplot"),
                            tree_type = "final_K",
                            mv_names = NULL,
                            ...) {
@@ -248,8 +249,8 @@ maskmeans_plot <- function(obj,
     }
   }
   if("tree" %in% type & !"merged_clusters" %in% names(obj)) {
-    if("merged_clusters" %in% names(obj)) {
-      message("-- tree plot is only possible for the splitting algorithm.")
+    if("merged_clusters" %in% names(obj) | "probapost" %in% names(obj)) {
+      message("-- tree plot is only possible for the hard splitting algorithm.")
     } else {
       if(tree_type == "all") {
         aux <- obj$split_clusters
@@ -263,6 +264,7 @@ maskmeans_plot <- function(obj,
         index <- which(apply(aux, 2, max) <= tree_type)
         aux <- obj$split_clusters[,index]
       }
+      
       colnames(aux) <- paste0("K", apply(aux, 2, max))
       
       aux <- data.frame(aux)
@@ -276,7 +278,7 @@ maskmeans_plot <- function(obj,
                               node_colour_aggr="mean")  +
         guides(edge_colour = FALSE, edge_alpha = FALSE) +
         theme(legend.position = "none") +
-        scale_edge_color_continuous(low = "grey10", high = "grey30") 
+        scale_edge_color_continuous(low = "grey10", high = "grey30")
       
       cmod <- c
       cmod_data <- cmod$data
@@ -287,6 +289,7 @@ maskmeans_plot <- function(obj,
         index_prev  <- which(cmod_data$K == Kval-1)
         drop_index <- which(cmod_data$x[index] %in% cmod_data$x[index_prev])
         cmod_data[index[drop_index],]$size <- 0
+#        cmod_data[index[drop_index],]$cluster <- " "
       }
       cmod_data$K <- factor(cmod_data$K)
       cmod_data$mean_color <- ifelse(cmod_data$size == 0, 0, 1)
@@ -294,7 +297,7 @@ maskmeans_plot <- function(obj,
       cmod$data <- cmod_data
       cmod <- cmod +
         scale_color_manual(values = c("white", "#21908CFF"))
-
+      
       g[["tree"]] <- cmod
     }
   }
@@ -308,10 +311,10 @@ maskmeans_plot <- function(obj,
   }
   
   if("tree_perClusterWeights" %in% type) {
-    if("merged_clusters" %in% names(obj)) {
-      message("-- tree plot is only possible for the splitting algorithm.")
+    if("merged_clusters" %in% names(obj) | "probapost" %in% names(obj)) {
+      message("-- tree plot with per-cluster weights is only possible for the hard splitting algorithm with per-cluster weights.")
     } else if(!is.list(obj$weights)) {
-      message("-- tree plot is only possible for the splitting algorithm with per-cluster weights.")
+      message("-- tree plot with per-cluster weights is only possible for the hard splitting algorithm with per-cluster weights.")
     } else {
       ## First plot tree
       if(tree_type == "all") {

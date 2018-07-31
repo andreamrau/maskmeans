@@ -142,7 +142,7 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
   fuzzy_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                                       type = "splitting", gamma=gamma, delta = 2,
                                       perCluster_mv_weights = TRUE, Kmax = 16,
-                                      parallel=TRUE) 
+                                      parallel=FALSE) 
   set.seed(12345)
   fuzzy_split_old_perCluster <- maskmeans:::splittingProbapostbis(X=X_scale, mv=mv,
      gamma=gamma, delta=2, Kmax=7, probapost.init=proba_init)

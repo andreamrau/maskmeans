@@ -4,7 +4,8 @@
 \alias{maskmeans}
 \title{Multi-view agglomeration or splitting K-means clustering algorithm}
 \usage{
-maskmeans(mv_data, clustering_init, type = "splitting", verbose = TRUE, ...)
+maskmeans(mv_data, clustering_init, type = "splitting", parallel = TRUE,
+  BPPARAM = bpparam(), verbose = TRUE, ...)
 }
 \arguments{
 \item{mv_data}{Multi-view data, either in the form of a concatenated matrix (where the columns of the views have
@@ -17,6 +18,16 @@ automtically based on the number of columns in each matrix.}
 \item{clustering_init}{Initial hard or fuzzy clustering to be used for aggregating or splitting clusters.}
 
 \item{type}{Either \code{"splitting"} or \code{"aggregation"}.}
+
+\item{parallel}{If \code{FALSE}, no parallelization. If \code{TRUE}, parallel
+execution using BiocParallel (see next argument \code{BPPARAM}) for the fuzzy splitting algorithm. A note on running
+in parallel using BiocParallel: it may be advantageous to remove large, unneeded objects
+from the current R environment before calling the function, as it is possible that R's
+internal garbage collection will copy these files while running on worker nodes.}
+
+\item{BPPARAM}{Optional parameter object passed internally to \code{bplapply} when
+\code{parallel=TRUE}. If not specified, the parameters last registered with \code{register}
+will be used.}
 
 \item{verbose}{If \code{TRUE}, provide verbose output.}
 
@@ -179,7 +190,8 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
   proba_init <- proba_init / rowSums(proba_init)
   fuzzy_split <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                            type = "splitting", gamma=gamma, delta = 2,
-                           perCluster_mv_weights = FALSE, Kmax = 16) 
+                           perCluster_mv_weights = FALSE, Kmax = 16,
+                           verbose=TRUE, parallel=TRUE) 
   set.seed(12345)
   fuzzy_split_old <- maskmeans:::splittingProbapost(X=X_scale, mv=mv,
                                                     gamma=gamma, delta=2, Kmax=7, 
@@ -201,7 +213,8 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
   set.seed(12345)
   fuzzy_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                                       type = "splitting", gamma=gamma, delta = 2,
-                                      perCluster_mv_weights = TRUE, Kmax = 16) 
+                                      perCluster_mv_weights = TRUE, Kmax = 16,
+                                      parallel=FALSE) 
   set.seed(12345)
   fuzzy_split_old_perCluster <- maskmeans:::splittingProbapostbis(X=X_scale, mv=mv,
      gamma=gamma, delta=2, Kmax=7, probapost.init=proba_init)
@@ -236,7 +249,6 @@ p <- maskmeans_plot(hard_split, type="tree", edge_arrow=FALSE)
 p <- maskmeans_plot(hard_split_perCluster, type="tree")
 p <- maskmeans_plot(hard_split_perCluster, type = "tree_perClusterWeights")
 p <- maskmeans_plot(hard_split_perCluster)
-
 
 ## Tree plots look weird here
 \dontrun{

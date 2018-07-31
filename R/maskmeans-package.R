@@ -88,7 +88,7 @@ NULL
 #' 
 #' @export
 #' @example /inst/examples/maskmeans-package.R
-maskmeans <- function(mv_data, clustering_init, type = "splitting", parallel=TRUE, verbose=TRUE, ...) {
+maskmeans <- function(mv_data, clustering_init, type = "splitting", parallel=TRUE, BPPARAM=bpparam(), verbose=TRUE, ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
   arg.user <- list(gamma=2, use_mv_weights=TRUE, Kmax=NULL, perCluster_mv_weights=FALSE, mv=NULL, parallel=FALSE, BPPARAM=bpparam())

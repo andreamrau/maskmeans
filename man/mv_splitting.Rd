@@ -5,7 +5,8 @@
 \title{Splitting of hard or fuzzy clusters based on multi-view data}
 \usage{
 mv_splitting(X, mv, clustering_init, Kmax, gamma = 2, use_mv_weights = TRUE,
-  delta = 2, perCluster_mv_weights = TRUE, verbose = TRUE)
+  delta = 2, perCluster_mv_weights = TRUE, verbose = TRUE,
+  parallel = TRUE, BPPARAM = bpparam())
 }
 \arguments{
 \item{X}{Matrix of multi-view data, where the first view corresponds to the 
@@ -33,6 +34,16 @@ weight for each view is set to be equal. This option is only used for hard clust
 Otherwise use classic multi-view weights.}
 
 \item{verbose}{If \code{TRUE}, provide verbose output}
+
+\item{parallel}{If \code{FALSE}, no parallelization. If \code{TRUE}, parallel
+execution using BiocParallel (see next argument \code{BPPARAM}) for the fuzzy splitting algorithm. A note on running
+in parallel using BiocParallel: it may be advantageous to remove large, unneeded objects
+from the current R environment before calling the function, as it is possible that R's
+internal garbage collection will copy these files while running on worker nodes.}
+
+\item{BPPARAM}{Optional parameter object passed internally to \code{bplapply} when
+\code{parallel=TRUE}. If not specified, the parameters last registered with \code{register}
+will be used.}
 }
 \value{
 \item{split_clusters }{Matrix providing the history of each cluster splitting at 
