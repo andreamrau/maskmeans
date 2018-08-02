@@ -29,7 +29,7 @@ mv_plot <- function(mv_data, scale=TRUE, mv=NULL, mv_names=NULL, labels=NULL, ..
   arg.user <- list(alpha=0.25)
   arg.user[names(providedArgs)] <- providedArgs
   alpha_orig <- arg.user$alpha
-  
+
   ## Format data: X, mv
   X <- mv_data
   if((is.matrix(mv_data) | is.data.frame(mv_data)) & is.null(mv))
@@ -59,9 +59,10 @@ mv_plot <- function(mv_data, scale=TRUE, mv=NULL, mv_names=NULL, labels=NULL, ..
       arg.user$alpha <- apply(labels, 1, max) 
       labels <- apply(labels, 1, which.max)
     }
+  } else{
+    labels <- rep(NA, nrow(X))
   }
 
-  
   Xplot <- matrix(nrow=0, ncol=5)
   colnames(Xplot) <- c("x", "y", "view", "labels", "alpha")
   ref <- c(0, cumsum(mv))
@@ -87,12 +88,20 @@ mv_plot <- function(mv_data, scale=TRUE, mv=NULL, mv_names=NULL, labels=NULL, ..
     }
   }
   
+  #Xplot$alpha <- as.numeric(Xplot$alpha)
+  Xplot$alpha_orig <- alpha_orig
+  
   if(sum(is.na(labels))) {
-    g <- ggplot(Xplot) + 
-      geom_point(data = Xplot[which(is.na(Xplot$y)==FALSE),], aes_string(x="x", y="y", alpha="alpha")) + 
-      geom_density(data = Xplot[which(is.na(Xplot$y)==TRUE),], aes_string(x="x", alpha=alpha_orig)) + 
+    Xplot$alpha <- I(Xplot$alpha)
+    Xplot$alpha_orig <- I(Xplot$alpha_orig)
+    
+    g <- ggplot(Xplot, aes_string(alpha="alpha")) + 
+      geom_point(data = Xplot[which(is.na(Xplot$y)==FALSE),], 
+                 aes_string(x="x", y="y")) + 
+      geom_density(data = Xplot[which(is.na(Xplot$y)==TRUE),], 
+                   aes_string(x="x", alpha=alpha_orig)) + 
       geom_rug(data = Xplot[which(is.na(Xplot$y)==TRUE),], 
-               aes_string(x="x", alpha="alpha"), sides="b") +
+               aes_string(x="x"), sides="b") +
       facet_wrap("view", scales="free_y") +
       guides(alpha=FALSE) + 
       xlab("") + ylab("") +
@@ -101,14 +110,16 @@ mv_plot <- function(mv_data, scale=TRUE, mv=NULL, mv_names=NULL, labels=NULL, ..
     
   } else {
     Xplot$labels <- factor(Xplot$labels)
-    Xplot$alpha <- as.numeric(Xplot$alpha)
-    g <- ggplot(Xplot) + 
+    Xplot$alpha <- I(Xplot$alpha)
+    Xplot$alpha_orig <- I(Xplot$alpha_orig)
+
+    g <- ggplot(Xplot, aes_string(alpha="alpha")) + 
       geom_point(data = Xplot[which(is.na(Xplot$y)==FALSE),], 
-                 aes_string(x="x", y="y", color="labels", fill="labels", alpha = "alpha")) + 
+                 aes_string(x="x", y="y", fill="labels", color="labels")) + 
       geom_density(data = Xplot[which(is.na(Xplot$y)==TRUE),], 
-                   aes_string(x="x", fill="labels", color="labels"), alpha=alpha_orig) + 
+                   aes_string(x="x", fill="labels", alpha = "alpha_orig", color="labels")) + 
       geom_rug(data = Xplot[which(is.na(Xplot$y)==TRUE),], 
-               aes_string(x="x", color="labels", alpha="alpha"), sides="b") +
+               aes_string(x="x", color="labels"), sides="b") +
       facet_wrap("view", scales="free_y") +
       guides(color=FALSE, fill=FALSE, alpha=FALSE) + 
       xlab("") + ylab("")+
