@@ -116,6 +116,8 @@ all.equal(hard_agglom$merged_clusters, hard_agglom_old$merge)
 set.seed(12345)
 proba_init <- matrix(runif(nrow(X)*20), ncol=20)
 proba_init <- proba_init / rowSums(proba_init)
+# library(fclust)
+# proba_init <- FKM(X, k=5)$U
 fuzzy_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                           type = "aggregation", gamma=gamma) 
 set.seed(12345)

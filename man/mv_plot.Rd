@@ -4,7 +4,8 @@
 \alias{mv_plot}
 \title{Overview plot of multi-view data}
 \usage{
-mv_plot(mv_data, scale = TRUE, ...)
+mv_plot(mv_data, scale = TRUE, mv = NULL, mv_names = NULL,
+  labels = NULL, ...)
 }
 \arguments{
 \item{mv_data}{Multi-view data, either in the form of a concatenated matrix (where the columns of the views have
@@ -17,8 +18,17 @@ automtically based on the number of columns in each matrix.}
 \item{scale}{If \code{TRUE}, data will be scaled so that all variables are normalized and views are standardized according 
 to their size.}
 
-\item{...}{Additional optional parameters. In particular, if points should be colored by cluster membership, a vector
-\code{labels} providing cluster assigments should be provided.}
+\item{mv}{(Optional unless \code{X} is a matrix.) If \code{X} is a matrix, vector 
+corresponding to the size of each data view.}
+
+\item{mv_names}{If desired, a vector of multiview names to be used for the plot.}
+
+\item{labels}{If points should be colored by a hard cluster membership, a vector providing cluster assigments 
+should be provided. If points should be colored by a fuzzy cluster
+membership (where the transparency of points reflects the maximum conditional probability of cluster membership), a 
+matrix providing conditional probabilities of cluster membership should be provided.}
+
+\item{...}{Additional optional parameters.}
 }
 \value{
 A multi-facetted plot, with one facet per view. Univariate views are represented as densities, bivariate views

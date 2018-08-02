@@ -10,26 +10,32 @@
 #' automtically based on the number of columns in each matrix.
 #' @param scale If \code{TRUE}, data will be scaled so that all variables are normalized and views are standardized according 
 #' to their size.
-#' @param ... Additional optional parameters. In particular, if points should be colored by cluster membership, a vector
-#' \code{labels} providing cluster assigments should be provided.
-#'
+#' @param mv (Optional unless \code{X} is a matrix.) If \code{X} is a matrix, vector 
+#' corresponding to the size of each data view. 
+#' @param mv_names If desired, a vector of multiview names to be used for the plot.
+#' @param labels If points should be colored by a hard cluster membership, a vector providing cluster assigments 
+#' should be provided. If points should be colored by a fuzzy cluster
+#' membership (where the transparency of points reflects the maximum conditional probability of cluster membership), a 
+#' matrix providing conditional probabilities of cluster membership should be provided. 
+#' @param ... Additional optional parameters. 
 #' @return A multi-facetted plot, with one facet per view. Univariate views are represented as densities, bivariate views
 #' are represented as scatterplots, and multivariate views are represented by plotting scatterplots of the first two 
 #' principal components.
 #' 
 #' @export
-mv_plot <- function(mv_data, scale=TRUE, ...) {
+mv_plot <- function(mv_data, scale=TRUE, mv=NULL, mv_names=NULL, labels=NULL, ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
-  arg.user <- list(mv=NULL, labels=NULL)
+  arg.user <- list(alpha=0.25)
   arg.user[names(providedArgs)] <- providedArgs
+  alpha_orig <- arg.user$alpha
   
   ## Format data: X, mv
   X <- mv_data
-  if((is.matrix(mv_data) | is.data.frame(mv_data)) & is.null(arg.user$mv))
+  if((is.matrix(mv_data) | is.data.frame(mv_data)) & is.null(mv))
     stop("If multi-view data are provided as a matrix, the dimension of each view must be specified in mv.")
   if(is.list(mv_data) & !is.data.frame(mv_data)) {
-    arg.user$mv <- unlist(lapply(mv_data, ncol))
+    mv <- unlist(lapply(mv_data, ncol))
     ## Sanity check on dimensions
     nr <- unlist(lapply(mv_data, nrow))
     if(sum(diff(nr))) stop("All views must be measured on the same set of observations.")
@@ -44,50 +50,67 @@ mv_plot <- function(mv_data, scale=TRUE, ...) {
     colnames(X) <- colnames(mv_data)
   }
   
-  if(is.null(arg.user$labels)) arg.user$labels <- rep(NA, nrow(X))
-  
   ## Scale data if desired
-  if(scale) X <- scaleview(X, unlist(arg.user$mv))
+  if(scale) X <- scaleview(X, unlist(mv))
   
-  Xplot <- matrix(nrow=0, ncol=4)
-  colnames(Xplot) <- c("x", "y", "view", "labels")
-  ref <- c(0, cumsum(arg.user$mv))
-  for(i in 1:length(arg.user$mv)) {
+  ## Check the contents of labels: TODO add tests for dimensions, 0<x<1
+  if(!is.null(labels)) {
+    if(is.matrix(labels) | is.data.frame(labels)) {
+      arg.user$alpha <- apply(labels, 1, max) 
+      labels <- apply(labels, 1, which.max)
+    }
+  }
+
+  
+  Xplot <- matrix(nrow=0, ncol=5)
+  colnames(Xplot) <- c("x", "y", "view", "labels", "alpha")
+  ref <- c(0, cumsum(mv))
+  for(i in 1:length(mv)) {
     dv <- (ref[i] + 1):ref[i + 1]
-    if(arg.user$mv[i] == 1) {
-      tmp <- data.frame(x=X[,dv], y=rep(NA, nrow(X)), view=rep(paste0("View ", i), nrow(X)),
-                        labels=arg.user$labels)
+    tmp_view <- ifelse(is.null(mv_names), rep(paste0("View ", i), nrow(X)),
+                       rep(mv_names[i], nrow(X)))
+    if(mv[i] == 1) {
+      tmp <- data.frame(x=X[,dv], y=rep(NA, nrow(X)), 
+                        view=tmp_view,
+                        labels=labels, alpha=arg.user$alpha)
       Xplot <- rbind(Xplot, tmp)
-    } else if(arg.user$mv[i] == 2) {
-      tmp <- data.frame(X[,dv], rep(paste0("View ", i), nrow(X)), labels=arg.user$labels)
-      colnames(tmp) <- c("x", "y", "view", "labels")
+    } else if(mv[i] == 2) {
+      tmp <- data.frame(X[,dv], tmp_view, labels=labels, alpha=arg.user$alpha)
+      colnames(tmp) <- c("x", "y", "view", "labels", "alpha")
       Xplot <- rbind(Xplot, tmp)
     } else {
       pca1 <- prcomp(X[,dv])
       scores <- data.frame(pca1$x)[,1:2]
-      tmp <- cbind(scores, rep(paste0("View ", i), nrow(X)), labels=arg.user$labels)
-      colnames(tmp) <- c("x", "y", "view", "labels")
+      tmp <- cbind(scores, tmp_view, labels=labels, alpha=arg.user$alpha)
+      colnames(tmp) <- c("x", "y", "view", "labels", "alpha")
       Xplot <- rbind(Xplot,tmp)
     }
   }
   
-  if(sum(is.na(arg.user$labels))) {
+  if(sum(is.na(labels))) {
     g <- ggplot(Xplot) + 
-      geom_point(data = Xplot[which(is.na(Xplot$y)==FALSE),], aes_string(x="x", y="y"), alpha=0.25) + 
-      geom_density(data = Xplot[which(is.na(Xplot$y)==TRUE),], aes_string(x="x"), alpha=0.25) + 
+      geom_point(data = Xplot[which(is.na(Xplot$y)==FALSE),], aes_string(x="x", y="y", alpha="alpha")) + 
+      geom_density(data = Xplot[which(is.na(Xplot$y)==TRUE),], aes_string(x="x", alpha=alpha_orig)) + 
+      geom_rug(data = Xplot[which(is.na(Xplot$y)==TRUE),], 
+               aes_string(x="x", alpha="alpha"), sides="b") +
       facet_wrap("view", scales="free_y") +
+      guides(alpha=FALSE) + 
       xlab("") + ylab("") +
       labs(caption="Univariate views are represented by density plots, bivariate views by scatterplots,\nand multivariate views by scatterplots of the first two principal components.") +
       theme_bw() 
+    
   } else {
     Xplot$labels <- factor(Xplot$labels)
+    Xplot$alpha <- as.numeric(Xplot$alpha)
     g <- ggplot(Xplot) + 
       geom_point(data = Xplot[which(is.na(Xplot$y)==FALSE),], 
-                 aes_string(x="x", y="y", color="labels", fill="labels"), alpha=0.25) + 
+                 aes_string(x="x", y="y", color="labels", fill="labels", alpha = "alpha")) + 
       geom_density(data = Xplot[which(is.na(Xplot$y)==TRUE),], 
-                   aes_string(x="x", fill="labels", color="labels"), alpha=0.25) + 
+                   aes_string(x="x", fill="labels", color="labels"), alpha=alpha_orig) + 
+      geom_rug(data = Xplot[which(is.na(Xplot$y)==TRUE),], 
+               aes_string(x="x", color="labels", alpha="alpha"), sides="b") +
       facet_wrap("view", scales="free_y") +
-      guides(color=FALSE, fill=FALSE) + 
+      guides(color=FALSE, fill=FALSE, alpha=FALSE) + 
       xlab("") + ylab("")+
       labs(caption="Univariate views are represented by density plots, bivariate views by scatterplots,\nand multivariate views by scatterplots of the first two principal components.") +
       theme_bw() 
