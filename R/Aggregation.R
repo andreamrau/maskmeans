@@ -227,8 +227,13 @@ mv_weights <- function(X, mv, centers, cluster, gamma, mode, delta=NULL) {
   
   if(mode == "hard") {
     tmp <- centers[match(cluster, rownames(centers)),]
-    aux1 <- as.numeric(rowsum(colSums(rowsum((X - tmp)^2, group=cluster)), 
-                              group=rep(LETTERS[1:length(mv)], times=mv)))
+    if(length(unique(cluster)) > 1) {
+      aux1 <- as.numeric(rowsum(colSums(rowsum((X - tmp)^2, group=cluster)), 
+                                group=rep(LETTERS[1:length(mv)], times=mv)))
+    } else {
+      aux1 <- as.numeric(rowsum(colSums((X-tmp)^2), group=rep(LETTERS[1:length(mv)], 
+                                                              times=mv)))
+    }
   }
   if(mode == "fuzzy") {
     aux <- matrix(0, nrow = length(labcluster), ncol = length(mv))
