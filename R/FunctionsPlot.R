@@ -191,8 +191,7 @@ maskmeans_plot <- function(obj,
                        y = rev(obj$criterion))
     } else {
       df <- data.frame(x = seq(from = length(unique(obj$split_clusters[,1])),
-              to = length(unique(obj$split_clusters[,ncol(obj$split_clusters)])),
-              by=1),
+                               length.out = length(obj$criterion), by=1),
                  y = obj$criterion)
     }
     g5 <- ggplot(df, aes_string(x = "x", y = "y")) +
@@ -225,8 +224,7 @@ maskmeans_plot <- function(obj,
                            row.names=NULL) 
         } else {
           df <- data.frame(cbind(seq(from = length(unique(obj$split_clusters[,1])),
-                      to = length(unique(obj$split_clusters[,ncol(obj$split_clusters)])),
-                                     by=1),
+                                     length.out = length(obj$criterion), by=1),
                                  seq(1, ncol(obj$weights)), t(obj$weights)),
                            row.names=NULL) 
         }
@@ -261,8 +259,7 @@ maskmeans_plot <- function(obj,
                          row.names=NULL) 
       } else {
         df <- data.frame(cbind(seq(from = length(unique(obj$split_clusters[,1])),
-                        to = length(unique(obj$split_clusters[,ncol(obj$split_clusters)])),
-                                   by=1),
+                                   length.out = length(obj$criterion), by=1),
                                seq(1, ncol(obj$weights)), t(obj$weights)),
                          row.names=NULL) 
       }

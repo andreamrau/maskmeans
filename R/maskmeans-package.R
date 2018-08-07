@@ -158,7 +158,7 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", parallel=TRU
     } else {
       KDDSE <- suppressWarnings(selectK_splitting(mv_run, X))
       K <- seq(from = length(unique(mv_run$split_clusters[,1])),
-               to = length(unique(mv_run$split_clusters[,ncol(mv_run$split_clusters)])),
+               to = arg.user$Kmax,
                by=1)
       final_classification <- mv_run$split_clusters[,which(K == KDDSE)]
       final_probapost <- NULL
