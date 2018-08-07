@@ -154,7 +154,7 @@ maskmeans_plot <- function(obj,
                            ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
-  arg.user <- list(mv_data=NULL, edge_arrow=TRUE)
+  arg.user <- list(mv_data=NULL, edge_arrow=TRUE, use_core_edges=TRUE)
   arg.user[names(providedArgs)] <- providedArgs
   
   if(class(obj) != "maskmeans") stop("This plot function expects an object of class maskmeans.")
@@ -302,7 +302,9 @@ maskmeans_plot <- function(obj,
         aux <- obj$split_clusters[,index]
       }
       
-      colnames(aux) <- paste0("K", apply(aux, 2, max))
+      colnames(aux) <- paste0("K", seq(from=length(unique(aux[,1])), 
+                                       length.out=ncol(aux),
+                                       by=1))
       
       aux <- data.frame(aux)
       aux$color <- 0
@@ -312,7 +314,8 @@ maskmeans_plot <- function(obj,
                               node_size_range=c(5,5),
                               edge_width = 0.5,
                               node_colour = "color",
-                              node_colour_aggr="mean")  +
+                              node_colour_aggr="mean",
+                              use_core_edges=arg.user$use_core_edges)  +
         guides(edge_colour = FALSE, edge_alpha = FALSE) +
         theme(legend.position = "none") +
         scale_edge_color_continuous(low = "grey10", high = "grey30")
@@ -368,7 +371,10 @@ maskmeans_plot <- function(obj,
         aux <- obj$split_clusters[,index0]
         if(class(aux) == "numeric") stop("No splits at the provided value of tree type.")
       }
-      colnames(aux) <- paste0("K", apply(aux, 2, max))
+
+      colnames(aux) <- paste0("K", seq(from=length(unique(aux[,1])), 
+                                       length.out=ncol(aux),
+                                       by=1))      
       aux <- data.frame(aux)
       aux$color <- 0
       c <- clustree::clustree(aux, prefix = "K", 
@@ -377,7 +383,8 @@ maskmeans_plot <- function(obj,
                               node_size_range=c(5,5),
                               edge_width = 0.5,
                               node_colour = "color",
-                              node_colour_aggr="mean")  +
+                              node_colour_aggr="mean",
+                              use_core_edges=arg.user$use_core_edges)  +
         guides(edge_colour = FALSE, edge_alpha = FALSE) +
         theme(legend.position = "none") +
         scale_edge_color_continuous(low = "grey10", high = "grey30") 
