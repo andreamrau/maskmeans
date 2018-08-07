@@ -190,7 +190,9 @@ maskmeans_plot <- function(obj,
       df <- data.frame(x = seq(2, length(obj$hclust$order)), 
                        y = rev(obj$criterion))
     } else {
-      df <- data.frame(x = apply(obj$split_clusters, 2, max),
+      df <- data.frame(x = seq(from = length(unique(obj$split_clusters[,1])),
+              to = length(unique(obj$split_clusters[,ncol(obj$split_clusters)])),
+              by=1),
                  y = obj$criterion)
     }
     g5 <- ggplot(df, aes_string(x = "x", y = "y")) +
@@ -222,7 +224,9 @@ maskmeans_plot <- function(obj,
                                  seq(1, ncol(obj$weights)), t(obj$weights)),
                            row.names=NULL) 
         } else {
-          df <- data.frame(cbind(apply(obj$split_clusters, 2, function(x) length(unique(x))),
+          df <- data.frame(cbind(seq(from = length(unique(obj$split_clusters[,1])),
+                      to = length(unique(obj$split_clusters[,ncol(obj$split_clusters)])),
+                                     by=1),
                                  seq(1, ncol(obj$weights)), t(obj$weights)),
                            row.names=NULL) 
         }
@@ -256,7 +260,9 @@ maskmeans_plot <- function(obj,
                                seq(1, ncol(obj$weights)), t(obj$weights)),
                          row.names=NULL) 
       } else {
-        df <- data.frame(cbind(apply(obj$split_clusters, 2, function(x) length(unique(x))),
+        df <- data.frame(cbind(seq(from = length(unique(obj$split_clusters[,1])),
+                        to = length(unique(obj$split_clusters[,ncol(obj$split_clusters)])),
+                                   by=1),
                                seq(1, ncol(obj$weights)), t(obj$weights)),
                          row.names=NULL) 
       }

@@ -294,7 +294,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
     split_clusters = clustersplithist
   )
   if(mode == "fuzzy") {
-    ret$probapost <- cluster
+    ret$final_probapost <- cluster
   }
   return(ret)
 }
