@@ -3,7 +3,7 @@
 #' Brief description of package ...
 #'
 #' \tabular{ll}{ Package: \tab maskmeans\cr Type: \tab Package\cr Version:
-#' \tab 0.0.7\cr Date: \tab 2018-07-30\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
+#' \tab 0.0.9\cr Date: \tab 2018-08-07\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 #' \tab yes\cr }
 #'
 #' @name maskmeans-package
