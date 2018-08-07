@@ -397,6 +397,7 @@ maskmeans_plot <- function(obj,
         index  <- which(cmod_data$K == Kval)
         index_prev  <- which(cmod_data$K == Kval-1)
         drop_index <- which(cmod_data$x[index] %in% cmod_data$x[index_prev])
+        if(!length(drop_index)) next;
         cmod_data[index[drop_index],]$size <- 0
       }
       cmod_data$K <- factor(cmod_data$K)
