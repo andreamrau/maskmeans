@@ -3,7 +3,7 @@
 #' Brief description of package ...
 #'
 #' \tabular{ll}{ Package: \tab maskmeans\cr Type: \tab Package\cr Version:
-#' \tab 0.0.9\cr Date: \tab 2018-08-07\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
+#' \tab 0.0.10\cr Date: \tab 2018-08-09\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 #' \tab yes\cr }
 #'
 #' @name maskmeans-package
@@ -85,6 +85,10 @@ NULL
 #' \item{final_classification }{Final classification of observations using \code{final_K} clusters (obtained by fixing the number 
 #' of splits in the splitting algorithm)}
 #' \item{final_K }{Number of clusters chosen via model selection by the data-drive slope estimation (DDSE) slope heuristics}
+#' \item{all_probapost }{List of conditional probabilities for each split for the 
+#' fuzzy splitting algorithm}
+#' \item{final_probapost }{Matrix of conditional probabilities of cluster membership for
+#' each observation for the model with \code{final_K} clusters}
 #' 
 #' @export
 #' @example /inst/examples/maskmeans-package.R
@@ -123,6 +127,7 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", parallel=TRU
   X <- scaleview(X, unlist(arg.user$mv))
   
   ## Feed into appropriate algorithm
+  all_probapost <- NULL
   if(type == "aggregation") {
     mv_run <- mv_aggregation(X=X, mv=arg.user$mv, clustering_init=clustering_init, 
                              gamma = arg.user$gamma, use_mv_weights = arg.user$use_mv_weights,
@@ -149,25 +154,29 @@ maskmeans <- function(mv_data, clustering_init, type = "splitting", parallel=TRU
                            parallel=arg.user$parallel, 
                            BPPARAM=arg.user$BPPARAM)
     if(is.null(mv_run$split_clusters)) {
-      final_classification <- final_probapost <- final_K <- NA
+      final_classification <- final_probapost <- final_K <- all_probapost <- NA
     } else if(length(apply(mv_run$split_clusters, 2, max)) < 10) {
       message("DDSE for model selection is only possible if at least 10 cluster splits are performed.\nYou can use maskmeans_cutree() to cut the tree at a specific value of K if desired.")
       final_classification <- NULL
       final_probapost <- NULL
       final_K <- NULL
+      all_probapost <- mv_run$all_probapost
     } else {
       KDDSE <- suppressWarnings(selectK_splitting(mv_run, X))
       K <- seq(from = length(unique(mv_run$split_clusters[,1])),
                to = arg.user$Kmax,
                by=1)
       final_classification <- mv_run$split_clusters[,which(K == KDDSE)]
-      final_probapost <- NULL
+      all_probapost <- mv_run$all_probapost
+      final_probapost <- mv_run$all_probapost[[which(unlist(lapply(mv_run$all_probapost, ncol)) == 
+                                                         KDDSE)]]
       final_K <- KDDSE
     } 
   }
   mv_run[["final_classification"]] <- final_classification
   mv_run[["final_probapost"]] <- final_probapost
   mv_run[["final_K"]] <- final_K
+  mv_run[["all_probapost"]] <- all_probapost
   
   class(mv_run) <- "maskmeans"
   return(mv_run)

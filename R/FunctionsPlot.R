@@ -352,7 +352,7 @@ maskmeans_plot <- function(obj,
   }
   
   if("tree_perClusterWeights" %in% type) {
-    if("merged_clusters" %in% names(obj) | "probapost" %in% names(obj)) {
+    if("merged_clusters" %in% names(obj) | "final_probapost" %in% names(obj)) {
       message("-- tree plot with per-cluster weights is only possible for the hard splitting algorithm with per-cluster weights.")
     } else if(!is.list(obj$weights)) {
       message("-- tree plot with per-cluster weights is only possible for the hard splitting algorithm with per-cluster weights.")

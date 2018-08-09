@@ -37,6 +37,8 @@
 #' \item{withnss }{The within sum-of-squares for each cluster at the last iteration}
 #' \item{ksplit }{Vector identifying which cluster was split at each iteration of the 
 #' algorithm}
+#' \item{all_probapost }{List of conditional probabilities for each split for the 
+#' fuzzy algorithm}
 #' 
 #' @export
 mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2, 
@@ -138,6 +140,14 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
   CRIT <- c(CRIT, sum(varclass)) 
   ksplit_save <- NULL
   cluster <- cluster_init
+  
+  ## For fuzzy algorithm, keep track of the probaposts
+  if(mode == "fuzzy") {
+    all_probapost <- list()
+    all_probapost_i <- 1
+    all_probapost[[all_probapost_i]] <- cluster_init
+    all_probapost_i <- all_probapost_i + 1
+  }
   
   ## Start splitting loop
   iter <- 1
@@ -249,6 +259,10 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
 #      cluster[I,ncol(cluster)] <- A$Pinew[,2]
 #      cluster[-I,ksplit] <- cluster[-I,ncol(cluster)] <- cluster[-I,ksplit]/2
       
+      ## Keep track of the probapost
+      all_probapost[[all_probapost_i]] <- cluster
+      all_probapost_i <- all_probapost_i + 1
+      
       ## Added update of clustering history here
       if(iter > 1) clustersplithist <- cbind(clustersplithist, clustersplithist[, iter])
       clustersplithist[, iter+1] <- apply(cluster, 1, which.max)
@@ -294,7 +308,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
     split_clusters = clustersplithist
   )
   if(mode == "fuzzy") {
-    ret$final_probapost <- cluster
+    ret$all_probapost <- all_probapost
   }
   return(ret)
 }

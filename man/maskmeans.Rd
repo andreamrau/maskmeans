@@ -64,6 +64,10 @@ algorithm}
 \item{final_classification }{Final classification of observations using \code{final_K} clusters (obtained by fixing the number 
 of splits in the splitting algorithm)}
 \item{final_K }{Number of clusters chosen via model selection by the data-drive slope estimation (DDSE) slope heuristics}
+\item{all_probapost }{List of conditional probabilities for each split for the 
+fuzzy splitting algorithm}
+\item{final_probapost }{Matrix of conditional probabilities of cluster membership for
+each observation for the model with \code{final_K} clusters}
 }
 \description{
 This is the primary function to run either the agglomeration or splitting version of the multi-view

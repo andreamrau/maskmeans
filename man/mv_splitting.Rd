@@ -56,6 +56,8 @@ multi-view weights}
 \item{withnss }{The within sum-of-squares for each cluster at the last iteration}
 \item{ksplit }{Vector identifying which cluster was split at each iteration of the 
 algorithm}
+\item{all_probapost }{List of conditional probabilities for each split for the 
+fuzzy algorithm}
 }
 \description{
 Splitting of hard or fuzzy clusters based on multi-view data
