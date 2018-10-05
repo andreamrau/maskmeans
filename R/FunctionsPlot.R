@@ -17,13 +17,15 @@
 #' should be provided. If points should be colored by a fuzzy cluster
 #' membership (where the transparency of points reflects the maximum conditional probability of cluster membership), a 
 #' matrix providing conditional probabilities of cluster membership should be provided. 
+#' @param include_default_caption If \code{TRUE}, include default caption.
 #' @param ... Additional optional parameters. 
 #' @return A multi-facetted plot, with one facet per view. Univariate views are represented as densities, bivariate views
 #' are represented as scatterplots, and multivariate views are represented by plotting scatterplots of the first two 
 #' principal components.
 #' 
 #' @export
-mv_plot <- function(mv_data, scale=TRUE, mv=NULL, mv_names=NULL, labels=NULL, ...) {
+mv_plot <- function(mv_data, scale=TRUE, mv=NULL, mv_names=NULL, labels=NULL, 
+                    include_default_caption = TRUE, ...) {
   ## Parse ellipsis function
   providedArgs <- list(...)
   arg.user <- list(alpha=0.25)
@@ -122,9 +124,13 @@ mv_plot <- function(mv_data, scale=TRUE, mv=NULL, mv_names=NULL, labels=NULL, ..
                aes_string(x="x", color="labels"), sides="b") +
       facet_wrap("view", scales="free_y") +
       guides(color=FALSE, fill=FALSE, alpha=FALSE) + 
-      xlab("") + ylab("")+
-      labs(caption="Univariate views are represented by density plots, bivariate views by scatterplots,\nand multivariate views by scatterplots of the first two principal components.") +
+      xlab("") + ylab("") +
       theme_bw() 
+    if(include_default_caption) {
+      g <- g +       
+        labs(caption="Univariate views are represented by density plots, bivariate views by scatterplots,\nand multivariate views by scatterplots of the first two principal components.")
+
+    }
 #    +  viridis::scale_color_viridis(discrete=TRUE) + viridis::scale_fill_viridis(discrete=TRUE) 
   }
   return(g)
