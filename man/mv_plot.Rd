@@ -5,7 +5,7 @@
 \title{Overview plot of multi-view data}
 \usage{
 mv_plot(mv_data, scale = TRUE, mv = NULL, mv_names = NULL,
-  labels = NULL, ...)
+  labels = NULL, include_default_caption = TRUE, ...)
 }
 \arguments{
 \item{mv_data}{Multi-view data, either in the form of a concatenated matrix (where the columns of the views have
@@ -27,6 +27,8 @@ corresponding to the size of each data view.}
 should be provided. If points should be colored by a fuzzy cluster
 membership (where the transparency of points reflects the maximum conditional probability of cluster membership), a 
 matrix providing conditional probabilities of cluster membership should be provided.}
+
+\item{include_default_caption}{If \code{TRUE}, include default caption.}
 
 \item{...}{Additional optional parameters.}
 }
