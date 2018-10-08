@@ -377,20 +377,20 @@ simuD6 <- function(delta, n, K, sigma) {
   lab <- cbind(lab, lab4)
   D6 = cbind(D6, V.5)
   
-  V6 = matrix(rnorm(2 * n * (2 * K + 1), sd = sigma), ncol = 2)
+  V6 = matrix(rnorm(2 * n * (2 * K + 1), sd = 2*sigma), ncol = 2)
   colnames(V6) <- c("V6.1", "V6.2")
   lab6 = rep(4, n * (2 * K + 1))
   a = sample(2 * K)[1:3]
   for (i in 1:length(a)) {
     I = which(lab[, 1] == a[i])
-    # V6[I, ] = V6[I, ] + matrix(rep(2 * delta * c(cos(theta[a[i]]), sin(theta[a[i]])), n), ncol =
-    #                              2, byrow = TRUE)
-    V6[I, ] = V6[I, ] + matrix(rep(delta * c(cos(theta[a[i]]), sin(theta[a[i]])), n), ncol =
-                                 2, byrow = TRUE)
+     V6[I, ] = V6[I, ] + matrix(rep(2 * delta * c(cos(theta[a[i]]), sin(theta[a[i]])), n), ncol =
+                                  2, byrow = TRUE)
+  #  V6[I, ] = V6[I, ] + matrix(rep(delta * c(cos(theta[a[i]]), sin(theta[a[i]])), n), ncol =
+  #                               2, byrow = TRUE)
     lab6[I] = i
   }
   lab <- cbind(lab, lab6)
   D6 = cbind(D6, V6)
-  
+
   return(list(data = data.frame(D6), lab = data.frame(lab)))
 }
