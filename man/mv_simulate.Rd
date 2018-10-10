@@ -4,7 +4,8 @@
 \alias{mv_simulate}
 \title{Simulate multi-view data}
 \usage{
-mv_simulate(type = "D6", delta, n, K, sigma)
+mv_simulate(type = "D6", delta, n, K, sigma, sigma_V6 = NULL,
+  delta_V6 = NULL)
 }
 \arguments{
 \item{type}{One of \code{D1}, \code{D2}, \code{D3}, \code{D4}, \code{D5}, \code{D6} 
@@ -21,6 +22,10 @@ it, this number should be odd. Defaults to 9.}
 
 \item{sigma}{(Optional) Variance of noise to be added to views 2 and 4 for simulations of type \code{D6}.
 Defaults to 1.}
+
+\item{sigma_V6}{(Optional) If desired, a different sigma parameter for view 6. Defaults to 2*sigma.}
+
+\item{delta_V6}{(Optional) If desired, a different delta parameter for view 6. Defaults to 2*delta.}
 }
 \value{
 \item{data }{Multi-view simulated data}

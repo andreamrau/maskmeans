@@ -13,6 +13,8 @@
 #' it, this number should be odd. Defaults to 9.
 #' @param sigma (Optional) Variance of noise to be added to views 2 and 4 for simulations of type \code{D6}.
 #' Defaults to 1.
+#' @param delta_V6 (Optional) If desired, a different delta parameter for view 6. Defaults to 2*delta.
+#' @param sigma_V6 (Optional) If desired, a different sigma parameter for view 6. Defaults to 2*sigma.
 #' @return
 #' \item{data }{Multi-view simulated data}
 #' \item{labels }{Matrix of dimension \code{n} x \code{v}, where \code{n} is the number
@@ -30,7 +32,9 @@
 #' sim_6a <- mv_simulate(type = "D6")
 #' sim_6b <- mv_simulate(type = "D6", delta=7, n=200, K=5, sigma=0.5)
 
-mv_simulate <- function(type = "D6", delta, n, K, sigma) {
+mv_simulate <- function(type = "D6", delta, n, K, sigma, sigma_V6=NULL, delta_V6=NULL) {
+  if(is.null(sigma_V6)) sigma_V6 <- 2*sigma
+  if(is.null(delta_V6)) delta_V6 <- 2*delta
   if(type == "D1") {
     sim <- simuD1()
   } else if(type == "D2") {
@@ -51,7 +55,8 @@ mv_simulate <- function(type = "D6", delta, n, K, sigma) {
     if(n < 0 | n %% 1) stop("n should be a nonnegative number of observations.")
     if(K < 0 | K %% 1) stop("K should be a nonnegative number of clusters")
     if(sigma < 0) stop("sigma should be a nonnegative variance for the added noise.")
-    sim <- simuD6(delta = delta, n=n, K=(K-1)/2, sigma=sigma)
+    sim <- simuD6(delta = delta, n=n, K=(K-1)/2, sigma=sigma, delta_V6 = delta_V6,
+                  sigma_V6 = sigma_V6)
   } else  stop("Only types D1, D2, D3, D4, D5, and D6 are currently supported.")
   return(list(data = sim$data, labels=sim$lab))
 }
@@ -326,7 +331,7 @@ simuD5 <- function() {
 }
 
 
-simuD6 <- function(delta, n, K, sigma) {
+simuD6 <- function(delta, n, K, sigma, sigma_V6, delta_V6) {
   data1 = matrix(rnorm(2 * n * (2 * K + 1)), ncol = 2)
   colnames(data1) <- c("V1.1", "V1.2")
   mvg = ((1:(2 * K + 1)) * n) - n + 1
@@ -377,15 +382,15 @@ simuD6 <- function(delta, n, K, sigma) {
   lab <- cbind(lab, lab4)
   D6 = cbind(D6, V.5)
   
-  V6 = matrix(rnorm(2 * n * (2 * K + 1), sd = sigma), ncol = 2)
+  V6 = matrix(rnorm(2 * n * (2 * K + 1), sd = sigma_V6), ncol = 2)
   colnames(V6) <- c("V6.1", "V6.2")
   lab6 = rep(4, n * (2 * K + 1))
   a = sample(2 * K)[1:3]
   for (i in 1:length(a)) {
     I = which(lab[, 1] == a[i])
-     V6[I, ] = V6[I, ] + matrix(rep(2 * delta * c(cos(theta[a[i]]), sin(theta[a[i]])), n), ncol =
+     V6[I, ] = V6[I, ] + matrix(rep(delta_V6 * c(cos(theta[a[i]]), sin(theta[a[i]])), n), ncol =
                                   2, byrow = TRUE)
-  #  V6[I, ] = V6[I, ] + matrix(rep(delta * c(cos(theta[a[i]]), sin(theta[a[i]])), n), ncol =
+ #   V6[I, ] = V6[I, ] + matrix(rep(delta * c(cos(theta[a[i]]), sin(theta[a[i]])), n), ncol =
   #                               2, byrow = TRUE)
     lab6[I] = i
   }
