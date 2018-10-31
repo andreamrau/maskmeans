@@ -9,7 +9,7 @@ Brief description of package ...
 }
 \details{
 \tabular{ll}{ Package: \tab maskmeans\cr Type: \tab Package\cr Version:
-\tab 0.0.10\cr Date: \tab 2018-08-09\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
+\tab 0.0.13\cr Date: \tab 2018-10-31\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 \tab yes\cr }
 }
 \references{

@@ -1,8 +1,8 @@
 Package: maskmeans
 Type: Package
 Title: Multi-view Aggregation and Splitting for K-Means Clustering
-Version: 0.0.12
-Date: 2018-10-05
+Version: 0.0.13
+Date: 2018-10-31
 Author: Andrea Rau, Cathy Maugis-Rabusseau, Antoine Godichon-Baggioni
 Maintainer: Andrea Rau <andrea.rau@inra.fr>
 Depends: R (>= 3.3.1)

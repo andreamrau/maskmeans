@@ -3,18 +3,17 @@
 #' Generate simulated multi-view data to illustrate the agglomerative and splitting versions of the
 #' multi-view K-means algorithm. 
 #' 
-#' @param type One of \code{D1}, \code{D2}, \code{D3}, \code{D4}, \code{D5}, \code{D6} 
-#' specifying the type of simulated data to generate.
-#' @param delta (Optional) Multiplicative factor controlling the spread of values around the origin in the first 
-#' view for simulations of type \code{D6}. Defaults to 7.
-#' @param n (Optional) Number of observations per cluster for simulations of type \code{D6}. Defaults to 250.
-#' @param K (Optional) Number of clusters in the first view for simulations of type \code{D6}. As this view is made up
+#' @param beta Multiplicative factor controlling the spread of values around the origin in the first (\code{beta}), 
+#' second (\code{beta}), and sixth (\code{beta_V6_multiplier} x \code{beta}) views. Defaults to 4.
+#' @param n  Number of observations per cluster for simulations. Defaults to 100.
+#' @param K Number of clusters in the first view for simulations. As this view is made up
 #' of a single cluster at the origin surrounded by evenly spaced clusters in a circular pattern around
-#' it, this number should be odd. Defaults to 9.
-#' @param sigma (Optional) Variance of noise to be added to views 2 and 4 for simulations of type \code{D6}.
-#' Defaults to 1.
-#' @param delta_V6 (Optional) If desired, a different delta parameter for view 6. Defaults to 2*delta.
-#' @param sigma_V6 (Optional) If desired, a different sigma parameter for view 6. Defaults to 2*sigma.
+#' it, this number should be odd. Defaults to 7.
+#' @param sigma Variance of noise to be added to views 2, 4, 5, and 6.
+#' Defaults to 1.5.
+#' @param beta_V6_multiplier Multiplicative parameter for the spread of values around the origin in view 6 
+#' (\code{beta_V6_multiplier} x \code{beta}). Defaults to 1.5.
+#' @param ... Additional optional parameters. 
 #' @return
 #' \item{data }{Multi-view simulated data}
 #' \item{labels }{Matrix of dimension \code{n} x \code{v}, where \code{n} is the number
@@ -32,9 +31,18 @@
 #' sim_6a <- mv_simulate(type = "D6")
 #' sim_6b <- mv_simulate(type = "D6", delta=7, n=200, K=5, sigma=0.5)
 
-mv_simulate <- function(type = "D6", delta, n, K, sigma, sigma_V6=NULL, delta_V6=NULL) {
-  if(is.null(sigma_V6)) sigma_V6 <- 2*sigma
-  if(is.null(delta_V6)) delta_V6 <- 2*delta
+mv_simulate <- function(beta=4, n=100, K=7, sigma=1.5, beta_V6_multiplier=1.5, ...) {
+  
+  ## Parse ellipsis function
+  providedArgs <- list(...)
+  arg.user <- list(type="D6")
+  arg.user[names(providedArgs)] <- providedArgs
+  type <- arg.user$type
+
+  delta <- beta
+  sigma_V6 <- sigma
+  delta_V6 <- beta_V6_multiplier * beta
+  
   if(type == "D1") {
     sim <- simuD1()
   } else if(type == "D2") {
@@ -46,10 +54,6 @@ mv_simulate <- function(type = "D6", delta, n, K, sigma, sigma_V6=NULL, delta_V6
   } else if (type == "D5") {
     sim <- simuD5()
   } else if (type == "D6") {
-    if(missing(delta)) delta <- 7
-    if(missing(n)) n <- 250
-    if(missing(K)) K <- 9
-    if(missing(sigma)) sigma <- 1
     if(! K %% 2) stop("Simulation D6 is only supported for an odd number of clusters.")
     if(delta < 0) stop("delta should be a nonnegative multiplicative factor.")
     if(n < 0 | n %% 1) stop("n should be a nonnegative number of observations.")

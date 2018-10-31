@@ -83,7 +83,7 @@ sim_3 <- mv_simulate(type = "D3")
 sim_4 <- mv_simulate(type = "D4")
 sim_5 <- mv_simulate(type = "D5")
 sim_6a <- mv_simulate(type = "D6")
-sim_6b <- mv_simulate(type = "D6", delta=7, n=200, K=5, sigma=0.5)
+sim_6b <- mv_simulate(type = "D6", beta=7, n=200, K=5, sigma=0.5)
 
 X <- sim_6a$data
 mv <- c(2,2,2,1,1,2)

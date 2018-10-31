@@ -4,28 +4,26 @@
 \alias{mv_simulate}
 \title{Simulate multi-view data}
 \usage{
-mv_simulate(type = "D6", delta, n, K, sigma, sigma_V6 = NULL,
-  delta_V6 = NULL)
+mv_simulate(beta = 4, n = 100, K = 7, sigma = 1.5,
+  beta_V6_multiplier = 1.5, ...)
 }
 \arguments{
-\item{type}{One of \code{D1}, \code{D2}, \code{D3}, \code{D4}, \code{D5}, \code{D6} 
-specifying the type of simulated data to generate.}
+\item{beta}{Multiplicative factor controlling the spread of values around the origin in the first (\code{beta}), 
+second (\code{beta}), and sixth (\code{beta_V6_multiplier} x \code{beta}) views. Defaults to 4.}
 
-\item{delta}{(Optional) Multiplicative factor controlling the spread of values around the origin in the first 
-view for simulations of type \code{D6}. Defaults to 7.}
+\item{n}{Number of observations per cluster for simulations. Defaults to 100.}
 
-\item{n}{(Optional) Number of observations per cluster for simulations of type \code{D6}. Defaults to 250.}
-
-\item{K}{(Optional) Number of clusters in the first view for simulations of type \code{D6}. As this view is made up
+\item{K}{Number of clusters in the first view for simulations. As this view is made up
 of a single cluster at the origin surrounded by evenly spaced clusters in a circular pattern around
-it, this number should be odd. Defaults to 9.}
+it, this number should be odd. Defaults to 7.}
 
-\item{sigma}{(Optional) Variance of noise to be added to views 2 and 4 for simulations of type \code{D6}.
-Defaults to 1.}
+\item{sigma}{Variance of noise to be added to views 2, 4, 5, and 6.
+Defaults to 1.5.}
 
-\item{sigma_V6}{(Optional) If desired, a different sigma parameter for view 6. Defaults to 2*sigma.}
+\item{beta_V6_multiplier}{Multiplicative parameter for the spread of values around the origin in view 6 
+(\code{beta_V6_multiplier} x \code{beta}). Defaults to 1.5.}
 
-\item{delta_V6}{(Optional) If desired, a different delta parameter for view 6. Defaults to 2*delta.}
+\item{...}{Additional optional parameters.}
 }
 \value{
 \item{data }{Multi-view simulated data}

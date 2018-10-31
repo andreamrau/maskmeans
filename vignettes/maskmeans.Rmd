@@ -44,7 +44,7 @@ of each view, respectively.
 
 ```{r}
 set.seed(12345)
-sim <- mv_simulate(type = "D6", delta=5, n=200, K=9, sigma=1.5)
+sim <- mv_simulate(beta=5, n=200, K=9, sigma=1.5)
 X <- sim$data         ## Simulated data
 mv <- c(2,2,2,1,1,2)  ## Size of each view
 all.equal(sum(mv), ncol(X))
