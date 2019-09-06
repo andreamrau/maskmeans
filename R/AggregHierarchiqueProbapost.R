@@ -6,7 +6,7 @@
 
 ##   Agrégation de clusters inspirée du multiview avec poids sur indiv ("probapost").
 ## Entrées :
-#  probapost.init : une classif fuzzy (probapost)  n x K
+#  probapost.init : une classif soft (probapost)  n x K
 #  X : les données (le 1er bloc correspond aux données principales utilisées pour obtenir classif)
 # mv : la taille de chaque multiview
 

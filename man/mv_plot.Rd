@@ -24,7 +24,7 @@ corresponding to the size of each data view.}
 \item{mv_names}{If desired, a vector of multiview names to be used for the plot.}
 
 \item{labels}{If points should be colored by a hard cluster membership, a vector providing cluster assigments 
-should be provided. If points should be colored by a fuzzy cluster
+should be provided. If points should be colored by a soft cluster
 membership (where the transparency of points reflects the maximum conditional probability of cluster membership), a 
 matrix providing conditional probabilities of cluster membership should be provided.}
 

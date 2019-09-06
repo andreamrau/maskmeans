@@ -39,23 +39,23 @@ all.equal(hard_agglom$criterion, hard_agglom_old$CRIT)
 all.equal(hard_agglom$merged_clusters, hard_agglom_old$merge)
 
 #**************************************
-## Test 2: fuzzy clustering aggregation
+## Test 2: soft clustering aggregation
 #**************************************
 set.seed(12345)
 proba_init <- matrix(runif(nrow(X)*20), ncol=20)
 proba_init <- proba_init / rowSums(proba_init)
 # library(fclust)
 # proba_init <- FKM(X, k=5)$U
-fuzzy_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
+soft_agglom <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                           type = "aggregation", gamma=gamma) 
 set.seed(12345)
-fuzzy_agglom_old <- maskmeans:::hmvprobapost(X_scale, mv=mv, gamma=gamma, 
+soft_agglom_old <- maskmeans:::hmvprobapost(X_scale, mv=mv, gamma=gamma, 
                                  probapost.init=proba_init)
 
-all.equal(fuzzy_agglom$weights, fuzzy_agglom_old$weights, 
+all.equal(soft_agglom$weights, soft_agglom_old$weights, 
           check.attributes=FALSE)
-all.equal(fuzzy_agglom$criterion, fuzzy_agglom_old$CRIT)           
-all.equal(fuzzy_agglom$merged_clusters, fuzzy_agglom_old$merge)
+all.equal(soft_agglom$criterion, soft_agglom_old$CRIT)           
+all.equal(soft_agglom$merged_clusters, soft_agglom_old$merge)
   
 #**************************************  
 ## Test 3: hard clustering splitting
@@ -112,46 +112,46 @@ all.equal(hard_split_perCluster$withinss, hard_split_old_perCluster$withinss,
 
 
 #**************************************
-## Test 5: fuzzy clustering splitting
+## Test 5: soft clustering splitting
 #**************************************
 \dontrun{
   set.seed(12345)
   proba_init <- matrix(runif(nrow(X)*5), ncol=5)
   proba_init <- proba_init / rowSums(proba_init)
-  fuzzy_split <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
+  soft_split <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                            type = "splitting", gamma=gamma, delta = 2,
                            perCluster_mv_weights = FALSE, Kmax = 16,
                            verbose=TRUE, parallel=TRUE) 
   set.seed(12345)
-  fuzzy_split_old <- maskmeans:::splittingProbapost(X=X_scale, mv=mv,
+  soft_split_old <- maskmeans:::splittingProbapost(X=X_scale, mv=mv,
                                                     gamma=gamma, delta=2, Kmax=7, 
                                                     probapost.init=proba_init)
-  all.equal(fuzzy_split$weights, fuzzy_split_old$weights,
+  all.equal(soft_split$weights, soft_split_old$weights,
             check.attributes=FALSE)
-  all.equal(fuzzy_split$criterion, fuzzy_split_old$CRIT)
+  all.equal(soft_split$criterion, soft_split_old$CRIT)
   ## Columns are not in the same order here but otherwise equal
-  all.equal(fuzzy_split$probapost, fuzzy_split_old$probapost)
+  all.equal(soft_split$probapost, soft_split_old$probapost)
   
 }
 
 
 
 #**************************************
-## Test 6: fuzzy clustering splitting with per-weights
+## Test 6: soft clustering splitting with per-weights
 #**************************************
 \dontrun{
   set.seed(12345)
-  fuzzy_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
+  soft_split_perCluster <- maskmeans(mv_data=X, mv=mv, clustering_init=proba_init, 
                                       type = "splitting", gamma=gamma, delta = 2,
                                       perCluster_mv_weights = TRUE, Kmax = 16,
                                       parallel=FALSE) 
   set.seed(12345)
-  fuzzy_split_old_perCluster <- maskmeans:::splittingProbapostbis(X=X_scale, mv=mv,
+  soft_split_old_perCluster <- maskmeans:::splittingProbapostbis(X=X_scale, mv=mv,
      gamma=gamma, delta=2, Kmax=7, probapost.init=proba_init)
-  all.equal(fuzzy_split_perCluster$weights, fuzzy_split_old_perCluster$weights, 
+  all.equal(soft_split_perCluster$weights, soft_split_old_perCluster$weights, 
              check.attributes=FALSE)
-  all.equal(fuzzy_split_perCluster$criterion, fuzzy_split_old_perCluster$CRIT)           
-  all.equal(fuzzy_split_perCluster$probapost, fuzzy_split_old_perCluster$probapost)
+  all.equal(soft_split_perCluster$criterion, soft_split_old_perCluster$CRIT)           
+  all.equal(soft_split_perCluster$probapost, soft_split_old_perCluster$probapost)
 }
 
 #**************************************
@@ -172,7 +172,7 @@ mv_plot(mv_data=sim_2$data, mv=c(2,2,2,2), labels=sim_2$labels[,1])
 mv_plot(mv_data=Xlist, labels=sim_6a$labels[,1])
 
 p <- maskmeans_plot(hard_agglom)
-p <- maskmeans_plot(fuzzy_agglom)
+p <- maskmeans_plot(soft_agglom)
 p <- maskmeans_plot(hard_split)  
 p <- maskmeans_plot(hard_split, type="tree")  
 p <- maskmeans_plot(hard_split, type="tree", edge_arrow=FALSE)  
@@ -182,8 +182,8 @@ p <- maskmeans_plot(hard_split_perCluster)
 
 ## Tree plots look weird here
 \dontrun{
-  p <- maskmeans_plot(fuzzy_split, type = "tree")  
-  p <- maskmeans_plot(fuzzy_split_perCluster)    
+  p <- maskmeans_plot(soft_split, type = "tree")  
+  p <- maskmeans_plot(soft_split_perCluster)    
 }
 
 ## Plot weights in the final splits originating from intial cluster 8 (using final_K)

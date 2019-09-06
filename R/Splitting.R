@@ -1,7 +1,7 @@
-#' Splitting of hard or fuzzy clusters based on multi-view data
+#' Splitting of hard or soft clusters based on multi-view data
 #'
 #' @param X Matrix of multi-view data, where the first view corresponds to the 
-#' principal data used to obtain the partition or fuzzy clustering in \code{cluster_init}
+#' principal data used to obtain the partition or soft clustering in \code{cluster_init}
 #' @param mv (Optional unless \code{X} is a matrix.) If \code{X} is a matrix, vector 
 #' corresponding to the size of each data view. 
 #' The sum of \code{mv} should correspond to the number of columns in \code{X}.
@@ -9,16 +9,16 @@
 #' @param gamma Parameter that controls the distribution of view weights. Default value is 2. 
 #' @param clustering_init Either a vector of available cluster labels (for hard clustering) 
 #' or a matrix
-#' of fuzzy classification labels (For fuzzy clustering)
+#' of soft classification labels (for soft clustering)
 #' @param use_mv_weights If \code{TRUE}, run algorithm in weighted multi-view mode; 
 #' if FALSE, the
 #' weight for each view is set to be equal. This option is only used for hard clustering.
 #' @param perCluster_mv_weights If \code{TRUE}, use cluster-specific multi-view weights.
 #' Otherwise use classic multi-view weights.
-#' @param delta Parameter that controls the weights on the fuzzy classifications pi(i,k)
+#' @param delta Parameter that controls the weights on the soft classifications pi(i,k)
 #' @param verbose If \code{TRUE}, provide verbose output
 #' @param parallel If \code{FALSE}, no parallelization. If \code{TRUE}, parallel
-#' execution using BiocParallel (see next argument \code{BPPARAM}) for the fuzzy splitting algorithm. A note on running
+#' execution using BiocParallel (see next argument \code{BPPARAM}) for the soft splitting algorithm. A note on running
 #' in parallel using BiocParallel: it may be advantageous to remove large, unneeded objects
 #' from the current R environment before calling the function, as it is possible that R's
 #' internal garbage collection will copy these files while running on worker nodes.
@@ -38,7 +38,7 @@
 #' \item{ksplit }{Vector identifying which cluster was split at each iteration of the 
 #' algorithm}
 #' \item{all_probapost }{List of conditional probabilities for each split for the 
-#' fuzzy algorithm}
+#' soft algorithm}
 #' 
 #' @export
 mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2, 
@@ -50,7 +50,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
   
   if(gamma < 1) stop("gamma must be greater than or equal to 1.")
   if(delta <= 1) stop("delta must be strictly greater than 1.")
-  mode <- ifelse(is.vector(clustering_init), "hard", "fuzzy")
+  mode <- ifelse(is.vector(clustering_init), "hard", "soft")
   cat("Running in mode:", mode, "\n")
   
   ref <- c(0, cumsum(mv))
@@ -142,7 +142,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
   cluster <- cluster_init
   
   ## For fuzzy algorithm, keep track of the probaposts
-  if(mode == "fuzzy") {
+  if(mode == "soft") {
     all_probapost <- list()
     all_probapost_i <- 1
     all_probapost[[all_probapost_i]] <- cluster_init
@@ -307,7 +307,7 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
     ksplit = ksplit_save, 
     split_clusters = clustersplithist
   )
-  if(mode == "fuzzy") {
+  if(mode == "soft") {
     ret$all_probapost <- all_probapost
   }
   return(ret)
@@ -318,12 +318,12 @@ mv_splitting <- function(X, mv, clustering_init, Kmax, gamma=2,
 
 mv_weights_perCluster <- function(X, mv, centers, cluster, gamma, mode, delta=NULL) {
   ref <- c(0, cumsum(mv))
-  if(mode == "fuzzy" & !is.matrix(cluster)) 
-    stop("Fuzzy clustering requires a matrix of posterior probabilities.")
+  if(mode == "soft" & !is.matrix(cluster)) 
+    stop("Soft clustering requires a matrix of posterior probabilities.")
   if(mode == "hard" & !is.vector(cluster)) 
     stop("Hard clustering requires a vector of cluster assignments.")
-  if(mode == "fuzzy" & is.null(delta))
-    stop("Fuzzy clustering requires a value for delta.")
+  if(mode == "soft" & is.null(delta))
+    stop("Soft clustering requires a value for delta.")
   weights = matrix(0, nrow = nrow(centers), ncol = length(mv))
   weightsmv = matrix(0, nrow = nrow(centers), ncol = sum(mv))
   for (k in 1:nrow(centers)) {

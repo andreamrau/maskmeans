@@ -2,15 +2,15 @@
 % Please edit documentation in R/Splitting.R
 \name{mv_splitting}
 \alias{mv_splitting}
-\title{Splitting of hard or fuzzy clusters based on multi-view data}
+\title{Splitting of hard or soft clusters based on multi-view data}
 \usage{
-mv_splitting(X, mv, clustering_init, Kmax, gamma = 2, use_mv_weights = TRUE,
-  delta = 2, perCluster_mv_weights = TRUE, verbose = TRUE,
-  parallel = TRUE, BPPARAM = bpparam())
+mv_splitting(X, mv, clustering_init, Kmax, gamma = 2,
+  use_mv_weights = TRUE, delta = 2, perCluster_mv_weights = TRUE,
+  verbose = TRUE, parallel = TRUE, BPPARAM = bpparam())
 }
 \arguments{
 \item{X}{Matrix of multi-view data, where the first view corresponds to the 
-principal data used to obtain the partition or fuzzy clustering in \code{cluster_init}}
+principal data used to obtain the partition or soft clustering in \code{cluster_init}}
 
 \item{mv}{(Optional unless \code{X} is a matrix.) If \code{X} is a matrix, vector 
 corresponding to the size of each data view. 
@@ -18,7 +18,7 @@ The sum of \code{mv} should correspond to the number of columns in \code{X}.}
 
 \item{clustering_init}{Either a vector of available cluster labels (for hard clustering) 
 or a matrix
-of fuzzy classification labels (For fuzzy clustering)}
+of soft classification labels (for soft clustering)}
 
 \item{Kmax}{Maximum number of clusters for splitting}
 
@@ -28,7 +28,7 @@ of fuzzy classification labels (For fuzzy clustering)}
 if FALSE, the
 weight for each view is set to be equal. This option is only used for hard clustering.}
 
-\item{delta}{Parameter that controls the weights on the fuzzy classifications pi(i,k)}
+\item{delta}{Parameter that controls the weights on the soft classifications pi(i,k)}
 
 \item{perCluster_mv_weights}{If \code{TRUE}, use cluster-specific multi-view weights.
 Otherwise use classic multi-view weights.}
@@ -36,7 +36,7 @@ Otherwise use classic multi-view weights.}
 \item{verbose}{If \code{TRUE}, provide verbose output}
 
 \item{parallel}{If \code{FALSE}, no parallelization. If \code{TRUE}, parallel
-execution using BiocParallel (see next argument \code{BPPARAM}) for the fuzzy splitting algorithm. A note on running
+execution using BiocParallel (see next argument \code{BPPARAM}) for the soft splitting algorithm. A note on running
 in parallel using BiocParallel: it may be advantageous to remove large, unneeded objects
 from the current R environment before calling the function, as it is possible that R's
 internal garbage collection will copy these files while running on worker nodes.}
@@ -57,8 +57,8 @@ multi-view weights}
 \item{ksplit }{Vector identifying which cluster was split at each iteration of the 
 algorithm}
 \item{all_probapost }{List of conditional probabilities for each split for the 
-fuzzy algorithm}
+soft algorithm}
 }
 \description{
-Splitting of hard or fuzzy clusters based on multi-view data
+Splitting of hard or soft clusters based on multi-view data
 }

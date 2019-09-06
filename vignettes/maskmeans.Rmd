@@ -57,16 +57,16 @@ We can visualize these data, as long as the true cluster labels corresponding to
 mv_plot(mv_data=X, mv=mv, labels=sim$labels[,1])
 ```
 
-Now before proceeding, we will obtain an initial hard and fuzzy clustering of the first view; in the case of the
+Now before proceeding, we will obtain an initial hard and soft clustering of the first view; in the case of the
 former, we will make use of a simple K-means algorithm, and in the case of the latter, we will use the `FKM` algorithm
 from the *fclust* package. We will also create an initialization of the hard clustering with a smaller number of clusters,
 for use as illustration in the splitting algorithm.
 
 ```{r}
 aggregate_hard_init <- kmeans(X[,1:2], centers=15)$cluster
-aggregate_fuzzy_init <- FKM(X[,1:2], k=15, maxit=10, RS=10)$U
+aggregate_soft_init <- FKM(X[,1:2], k=15, maxit=10, RS=10)$U
 split_hard_init <- kmeans(X[,1:2], centers=2)$cluster
-split_fuzzy_init <- FKM(X[,1:2], k=2, maxit=10, RS=10)$U
+split_soft_init <- FKM(X[,1:2], k=2, maxit=10, RS=10)$U
 ```
 
 
@@ -94,25 +94,25 @@ adjustedRandIndex(aggregate_hard_init, sim$labels[,1])
 ```
 
 
-## Aggregation multi-view algorithm with fuzzy clustering
-In this section, we illustrate the output of the aggregation multi-view algorithm with fuzzy clustering intialization.
+## Aggregation multi-view algorithm with soft clustering
+In this section, we illustrate the output of the aggregation multi-view algorithm with soft clustering intialization.
 ```{r}
-fuzzy_aggreg <- maskmeans(mv_data=X, mv=mv, clustering_init=aggregate_fuzzy_init, 
+soft_aggreg <- maskmeans(mv_data=X, mv=mv, clustering_init=aggregate_soft_init, 
                          type = "aggregation", gamma=2) 
 ```
 
 We can check the number of clusters selected via the DDSE algorithm and plot the relevant plots from the `maskmeans` output.
 
 ```{r, fig.height = 8, fig.width=10}
-fuzzy_aggreg$final_K
-p <- maskmeans_plot(fuzzy_aggreg)
+soft_aggreg$final_K
+p <- maskmeans_plot(soft_aggreg)
 ```
 
 If desired, we can plot the original data with the new labels superimposed, as well as calculate the adjusted Rand index with the true simulated labels as well as the estimated labels from the original K-means on the first view.
 ```{r, fig.width = 10, fig.height=6}
-# mv_plot(mv_data=X, mv=mv, labels=fuzzy_aggreg$final_classification)
-adjustedRandIndex(fuzzy_aggreg$final_classification, sim$labels[,1])
-adjustedRandIndex(apply(aggregate_fuzzy_init, 1, which.max), sim$labels[,1])
+# mv_plot(mv_data=X, mv=mv, labels=soft_aggreg$final_classification)
+adjustedRandIndex(soft_aggreg$final_classification, sim$labels[,1])
+adjustedRandIndex(apply(aggregate_soft_init, 1, which.max), sim$labels[,1])
 ```
 
 ## Splitting multi-view algorithm with hard clustering
@@ -178,11 +178,11 @@ adjustedRandIndex(hard_split_perCluster$final_classification, sim$labels[,1])
 adjustedRandIndex(split_hard_init, sim$labels[,1])
 ```
 
-## Splitting multi-view algorithm with fuzzy clustering
-In this section, we illustrate the output of the splitting multi-view algorithm with fuzzy clustering intialization. (TODO)
+## Splitting multi-view algorithm with soft clustering
+In this section, we illustrate the output of the splitting multi-view algorithm with soft clustering intialization. (TODO)
 
-## Splitting multi-view algorithm with fuzzy clustering and per-cluster weights
-In this section, we illustrate the output of the splitting multi-view algorithm with fuzzy clustering intialization and per-cluster weights. (TODO)
+## Splitting multi-view algorithm with soft clustering and per-cluster weights
+In this section, we illustrate the output of the splitting multi-view algorithm with soft clustering intialization and per-cluster weights. (TODO)
 
 ## Other considerations
 

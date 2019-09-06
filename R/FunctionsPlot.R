@@ -14,7 +14,7 @@
 #' corresponding to the size of each data view. 
 #' @param mv_names If desired, a vector of multiview names to be used for the plot.
 #' @param labels If points should be colored by a hard cluster membership, a vector providing cluster assigments 
-#' should be provided. If points should be colored by a fuzzy cluster
+#' should be provided. If points should be colored by a soft cluster
 #' membership (where the transparency of points reflects the maximum conditional probability of cluster membership), a 
 #' matrix providing conditional probabilities of cluster membership should be provided. 
 #' @param include_default_caption If \code{TRUE}, include default caption.
@@ -350,7 +350,7 @@ maskmeans_plot <- function(obj,
   }
   if("probapost_boxplot" %in% type) {
     if(is.null(obj$final_probapost)) {
-      message("-- probapost_boxplot is only possible for posterior probabilities from fuzzy aggregation/splitting algorithms")
+      message("-- probapost_boxplot is only possible for posterior probabilities from soft aggregation/splitting algorithms")
     } else {
       pbox <- probapost_boxplot(obj$final_probapost)
       g[["probapost_boxplot"]] <- pbox
@@ -537,13 +537,25 @@ split_zoom <- function(obj,
   
   w <- obj$weights
   w_select <- w[[index0]][aux00,]
-  if(is.null(mv_names)) {
-    colnames(w_select) <- paste0("View ", 1:ncol(w_select))
+  if(!is.null(dim(w_select))) {
+    if(is.null(mv_names)) {
+      colnames(w_select) <- paste0("View ", 1:ncol(w_select))
+    } else {
+      if(length(mv_names) != ncol(w_select)) stop("mv_names must be the same length as the number of views")
+      colnames(w_select) <- mv_names
+    }
+    rownames(w_select) <- aux00
   } else {
-    if(length(mv_names) != ncol(w_select)) stop("mv_names must be the same length as the number of views")
-    colnames(w_select) <- mv_names
+    if(is.null(mv_names)) {
+      names(w_select) <- paste0("View ", 1:length(w_select))
+    } else {
+      if(length(mv_names) != length(w_select)) stop("mv_names must be the same length as the number of views")
+      names(w_select) <- mv_names
+    }
+    w_select <- matrix(w_select, nrow = 1)
+    rownames(w_select) <- aux00
   }
-  rownames(w_select) <- aux00
+
   w_select <- data.frame(w_select, check.names=FALSE)
   
   

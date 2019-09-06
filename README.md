@@ -13,7 +13,7 @@ devtools::install_github("andreamrau/maskmeans", build_vignettes=TRUE)
 library(maskmeans)
 ```
 
-*maskmeans* incorporates algorithms for aggregating or splitting an existing hard or fuzzy classification using multi-view data. The primary functions of this package are as follows:
+*maskmeans* incorporates algorithms for aggregating or splitting an existing hard or soft classification using multi-view data. The primary functions of this package are as follows:
 
 - `maskmeans`, which itself calls one of the two following functions:
     * `mv_aggregation`

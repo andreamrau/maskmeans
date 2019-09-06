@@ -1,13 +1,13 @@
-#' Aggregation of hard or fuzzy clusters based on multi-view data
+#' Aggregation of hard or soft clusters based on multi-view data
 #'
 #' @param X Matrix of multi-view data, where the first view corresponds to the 
-#' principal data used to obtain the partition or fuzzy clustering in \code{cluster_init}
+#' principal data used to obtain the partition or soft clustering in \code{cluster_init}
 #' @param mv (Optional unless \code{X} is a matrix.) If \code{X} is a matrix, vector 
 #' corresponding to the size of each data view. 
 #' The sum of \code{mv} should correspond to the number of columns in \code{X}.
 #' @param gamma Parameter that controls the distribution of view weights. Default value is 2. 
 #' @param clustering_init Either a vector of available cluster labels (for hard clustering) or a matrix
-#' of fuzzy classification labels (For fuzzy clustering)
+#' of soft classification labels (For soft clustering)
 #' @param use_mv_weights If \code{TRUE}, run algorithm in weighted multi-view mode; if FALSE, the
 #' weight for each view is set to be equal. This option is only used for hard clustering.
 #' @param verbose If \code{TRUE}, provide verbose output
@@ -23,7 +23,7 @@
 mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRUE, verbose=TRUE) {
   
   if(gamma < 1) stop("gamma must be greater than or equal to 1.")
-  mode <- ifelse(is.vector(clustering_init), "hard", "fuzzy")
+  mode <- ifelse(is.vector(clustering_init), "hard", "soft")
   cat("Running in mode:", mode, "\n")
 
   weights_save <- NULL
@@ -43,7 +43,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
     }
   }
   
-  if(mode == "fuzzy") {
+  if(mode == "soft") {
     probapost_init <- probapost <- cluster_init
     # Calculate initial cluster centers
     centers_init <- matrix(0, nrow = Kmax, ncol = ncol(X))
@@ -68,7 +68,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
   noeud <-
     (-1) * seq(1, Kmax, 1)     # les étiquettes initiales sont -1,-2, ... -Kmax dans hclust
   if(mode == "hard") cluster <- -cluster_init      # on marque les clusters initiaux avec des "-" pour le hclust ensuite
-  if(mode == "fuzzy") cluster <- -(1:Kmax)
+  if(mode == "soft") cluster <- -(1:Kmax)
 
   # Initial calculation of aggregation matrices D(Ck,Ck'): Possibly to be optimized? TODO 
   D <- matrix(0, nrow = Kmax, ncol = Kmax)
@@ -80,7 +80,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
         ni <- length(I)
         nj <- length(J)
       }
-      if(mode == "fuzzy") {
+      if(mode == "soft") {
         ni <- sum(probapost_init[, i])
         nj <- sum(probapost_init[, j])
       }
@@ -126,7 +126,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
     cluster[which(cluster == aggreg[compt, 1])] <- compt
     cluster[which(cluster == aggreg[compt, 2])] <- compt
     
-    if(mode == "fuzzy") {
+    if(mode == "soft") {
       
       probapost <- cbind(probapost, rep(0, nrow(probapost)))
       colnames(probapost)[ncol(probapost)] <- compt
@@ -175,7 +175,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
           ni <- length(I)
           nj <- length(J)
         }
-        if(mode == "fuzzy") {
+        if(mode == "soft") {
           ni <- sum(probapost[, i])
           nj <- sum(probapost[, j])
         }
@@ -222,7 +222,7 @@ mv_aggregation <- function(X, mv, clustering_init, gamma=2, use_mv_weights = TRU
 mv_weights <- function(X, mv, centers, cluster, gamma, mode, delta=NULL) {
   ref <- c(0, cumsum(mv))
   labcluster <- as.numeric(rownames(centers))
-  if(mode == "fuzzy" & !is.matrix(cluster)) stop("Fuzzy clustering requires a matrix of posterior probabilities.")
+  if(mode == "soft" & !is.matrix(cluster)) stop("Soft clustering requires a matrix of posterior probabilities.")
   if(mode == "hard" & !is.vector(cluster)) stop("Hard clustering requires a vector of cluster assignments.")
   
   if(mode == "hard") {
@@ -235,7 +235,7 @@ mv_weights <- function(X, mv, centers, cluster, gamma, mode, delta=NULL) {
                                                               times=mv)))
     }
   }
-  if(mode == "fuzzy") {
+  if(mode == "soft") {
     aux <- matrix(0, nrow = length(labcluster), ncol = length(mv))
     for (k in 1:length(labcluster)) {
       # for each cluster k
@@ -266,7 +266,7 @@ mv_weights <- function(X, mv, centers, cluster, gamma, mode, delta=NULL) {
 ## NOT exported: function to calculate criteria for agglomeration
 
 criterion <- function(X, mv, gamma, weights, cluster, probapost=NULL, mode="hard") {
-  if(mode == "fuzzy" & missing(probapost)) stop("Fuzzy clustering requires probapost argument.")
+  if(mode == "soft" & missing(probapost)) stop("Soft clustering requires probapost argument.")
   ref <- c(0, cumsum(mv))
   clustername <- unique(cluster)
   nbcluster <- length(clustername)
@@ -276,7 +276,7 @@ criterion <- function(X, mv, gamma, weights, cluster, probapost=NULL, mode="hard
     varclass <- as.matrix(rowsum(t(rowsum((X-tmp)^2, group=cluster)), group=rep(LETTERS[1:length(mv)], times=mv)))
     varclass_weighted <- sum(varclass * (weights^gamma) )
   }
-  if(mode == "fuzzy") {
+  if(mode == "soft") {
     centers <- matrix(0, nrow = nbcluster, ncol = ncol(X))
     for (k in 1:nbcluster)
       centers[k,] <-
@@ -314,10 +314,10 @@ maskmeans_cutree <- function(obj, K, clustering_init) {
   hclust_obj <- obj$hclust
   cluster <- clustering_init
   if(is.vector(cluster)) mode <- "hard"
-  if(!is.vector(cluster)) mode <- "fuzzy"
+  if(!is.vector(cluster)) mode <- "soft"
   R <- hclust_obj
   cc <- cutree(R, K)
-  if(mode == "fuzzy") {
+  if(mode == "soft") {
     probapost_init <- cluster
     classif <- apply(probapost_init, 1, which.max)
   } else {
@@ -327,7 +327,7 @@ maskmeans_cutree <- function(obj, K, clustering_init) {
     classif[which(classif == names(cc)[j])] <- cc[j]
   
   if(mode == "hard") return(list(classif = classif))
-  if(mode == "fuzzy") {
+  if(mode == "soft") {
     probapost <- matrix(0, nrow = nrow(probapost_init), ncol = K)
     for (k in 1:K) {
       if (length(which(cc == k)) > 1) {

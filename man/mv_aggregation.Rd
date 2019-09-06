@@ -2,21 +2,21 @@
 % Please edit documentation in R/Aggregation.R
 \name{mv_aggregation}
 \alias{mv_aggregation}
-\title{Aggregation of hard or fuzzy clusters based on multi-view data}
+\title{Aggregation of hard or soft clusters based on multi-view data}
 \usage{
-mv_aggregation(X, mv, clustering_init, gamma = 2, use_mv_weights = TRUE,
-  verbose = TRUE)
+mv_aggregation(X, mv, clustering_init, gamma = 2,
+  use_mv_weights = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{X}{Matrix of multi-view data, where the first view corresponds to the 
-principal data used to obtain the partition or fuzzy clustering in \code{cluster_init}}
+principal data used to obtain the partition or soft clustering in \code{cluster_init}}
 
 \item{mv}{(Optional unless \code{X} is a matrix.) If \code{X} is a matrix, vector 
 corresponding to the size of each data view. 
 The sum of \code{mv} should correspond to the number of columns in \code{X}.}
 
 \item{clustering_init}{Either a vector of available cluster labels (for hard clustering) or a matrix
-of fuzzy classification labels (For fuzzy clustering)}
+of soft classification labels (For soft clustering)}
 
 \item{gamma}{Parameter that controls the distribution of view weights. Default value is 2.}
 
@@ -33,5 +33,5 @@ views and \code{niterations} is the number of successive agglomerations, providi
 \item{criterion }{Value taken on by the agglomerative criterion at each iteration}
 }
 \description{
-Aggregation of hard or fuzzy clusters based on multi-view data
+Aggregation of hard or soft clusters based on multi-view data
 }

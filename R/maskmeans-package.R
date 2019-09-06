@@ -42,11 +42,11 @@ NULL
 #' the number of columns in the matrix). In the latter case, each matrix in the list should have observations (rows) sorted
 #' in the same order, as matrices will be combined by columns within the function; note that \code{mv} will be detected 
 #' automtically based on the number of columns in each matrix.
-#' @param clustering_init Initial hard or fuzzy clustering to be used for aggregating or splitting clusters.
+#' @param clustering_init Initial hard or soft clustering to be used for aggregating or splitting clusters.
 #' @param type Either \code{"splitting"} or \code{"aggregation"}.
 #' @param verbose If \code{TRUE}, provide verbose output.
 #' @param parallel If \code{FALSE}, no parallelization. If \code{TRUE}, parallel
-#' execution using BiocParallel (see next argument \code{BPPARAM}) for the fuzzy splitting algorithm. A note on running
+#' execution using BiocParallel (see next argument \code{BPPARAM}) for the soft splitting algorithm. A note on running
 #' in parallel using BiocParallel: it may be advantageous to remove large, unneeded objects
 #' from the current R environment before calling the function, as it is possible that R's
 #' internal garbage collection will copy these files while running on worker nodes.
@@ -86,7 +86,7 @@ NULL
 #' of splits in the splitting algorithm)}
 #' \item{final_K }{Number of clusters chosen via model selection by the data-drive slope estimation (DDSE) slope heuristics}
 #' \item{all_probapost }{List of conditional probabilities for each split for the 
-#' fuzzy splitting algorithm}
+#' soft splitting algorithm}
 #' \item{final_probapost }{Matrix of conditional probabilities of cluster membership for
 #' each observation for the model with \code{final_K} clusters}
 #' 
