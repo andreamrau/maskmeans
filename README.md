@@ -1,5 +1,10 @@
 # maskmeans: Multi-view aggregation/splitting K-means clustering algorithm
 
+
+
+[![DOI](https://zenodo.org/badge/122631797.svg)](https://zenodo.org/badge/latestdoi/122631797)
+
+
 The *maskmeans* package can be installed as follows:
 
 ```
