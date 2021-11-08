@@ -4,8 +4,7 @@
 \alias{split_zoom}
 \title{Plot zoom results of the final weights from the multi-view splitting K-means algorithm}
 \usage{
-split_zoom(obj, initial_cluster = 1, final_K = NULL, mv_names = NULL,
-  ...)
+split_zoom(obj, initial_cluster = 1, final_K = NULL, mv_names = NULL, ...)
 }
 \arguments{
 \item{obj}{Object of class \code{"maskmeans"} resulting from a call to the \code{maskmeans}

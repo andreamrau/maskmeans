@@ -4,9 +4,19 @@
 \alias{mv_splitting}
 \title{Splitting of hard or soft clusters based on multi-view data}
 \usage{
-mv_splitting(X, mv, clustering_init, Kmax, gamma = 2,
-  use_mv_weights = TRUE, delta = 2, perCluster_mv_weights = TRUE,
-  verbose = TRUE, parallel = TRUE, BPPARAM = bpparam())
+mv_splitting(
+  X,
+  mv,
+  clustering_init,
+  Kmax,
+  gamma = 2,
+  use_mv_weights = TRUE,
+  delta = 2,
+  perCluster_mv_weights = TRUE,
+  verbose = TRUE,
+  parallel = TRUE,
+  BPPARAM = bpparam()
+)
 }
 \arguments{
 \item{X}{Matrix of multi-view data, where the first view corresponds to the 

@@ -4,8 +4,15 @@
 \alias{maskmeans}
 \title{Multi-view agglomeration or splitting K-means clustering algorithm}
 \usage{
-maskmeans(mv_data, clustering_init, type = "splitting",
-  parallel = TRUE, BPPARAM = bpparam(), verbose = TRUE, ...)
+maskmeans(
+  mv_data,
+  clustering_init,
+  type = "splitting",
+  parallel = TRUE,
+  BPPARAM = bpparam(),
+  verbose = TRUE,
+  ...
+)
 }
 \arguments{
 \item{mv_data}{Multi-view data, either in the form of a concatenated matrix (where the columns of the views have
@@ -267,4 +274,9 @@ s <- split_zoom(hard_split_perCluster, initial_cluster = 8, mv_names = letters[1
 
 
 
+}
+\references{
+Godichon-Baggioni, A., Maugis-Rabusseau, C. and Rau, A. (2020) Multi-view 
+cluster aggregation and splitting, with an application to multi-omic breast 
+cancer data. Annals of Applied Statistics, 14:2, 752-767.
 }

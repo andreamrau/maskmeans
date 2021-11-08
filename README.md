@@ -32,3 +32,7 @@ There are also two main plotting functions:
 - `maskmeans_plot`, to plot results of the `maskmeans` function. Plot types provided through this function include `type =  c("dendrogram", "heights", "weights_line", "weights", "criterion", "tree")`
 
 See the package [vignette](https://github.com/andreamrau/maskmeans/blob/master/vignettes/maskmeans.Rmd) for a full example and description. If the package was installed with the built vignette above, it may be accessed after loading the package via  `vignette("maskmeans")`.
+
+If you use *maskmeans* in your research, please cite our work:
+
+- Godichon-Baggioni, A., Maugis-Rabusseau, C. and Rau, A. (2020) Multi-view cluster aggregation and splitting, with an application to multi-omic breast cancer data. Annals of Applied Statistics, 14:2, 752-767. [DOI: 10.1214/19-AOAS1317](https://projecteuclid.org/journals/annals-of-applied-statistics/volume-14/issue-2/Multiview-cluster-aggregation-and-splitting-with-an-application-to-multiomic/10.1214/19-AOAS1317.short)

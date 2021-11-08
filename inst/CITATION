@@ -3,10 +3,10 @@ citHeader("To cite the R package 'maskmeans' in publications use:")
 
 citEntry(entry   = "article",
          title   = "Multi-view cluster aggregation and splitting, with an application to multi-omic breast cancer data",
-		 journal = "In preparation",
+		 journal = "Annals of Applied Statistics",
          year    = "2018",
          author  = personList(
            person(given="Antoine", family="Godichon-Baggioni"),
 	   person(given="Cathy", family="Maugis-Rabusseau"),
 	   person(given="Andrea", family="Rau")),
-         textVersion = "Godichon-Baggioni, A., Maugis-Rabusseau, C., and Rau, A.(2018) Multi-view cluster aggregation and splitting, with an application to multi-omic breast cancer data. In preparation.")
+         textVersion = "Godichon-Baggioni, A., Maugis-Rabusseau, C. and Rau, A. (2020) Multi-view cluster aggregation and splitting, with an application to multi-omic breast cancer data. Annals of Applied Statistics, 14:2, 752-767.")

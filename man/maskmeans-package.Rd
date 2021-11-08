@@ -5,15 +5,18 @@
 \alias{maskmeans-package}
 \title{Multi-view agglomeration/splitting K-means clustering algorithm}
 \description{
-Brief description of package ...
+This package incorporates algorithms for aggregating or splitting an 
+existing hard or soft classification using multi-view data.
 }
 \details{
 \tabular{ll}{ Package: \tab maskmeans\cr Type: \tab Package\cr Version:
-\tab 0.0.13\cr Date: \tab 2018-10-31\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
+\tab 0.0.15\cr Date: \tab 2021-11-08\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 \tab yes\cr }
 }
 \references{
-To be completed ...
+Godichon-Baggioni, A., Maugis-Rabusseau, C. and Rau, A. (2020) Multi-view 
+cluster aggregation and splitting, with an application to multi-omic breast 
+cancer data. Annals of Applied Statistics, 14:2, 752-767.
 }
 \author{
 Andrea Rau, Cathy Maugis-Rabusseau, Antoine Godichon-Baggioni

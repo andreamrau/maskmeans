@@ -4,8 +4,15 @@
 \alias{mv_plot}
 \title{Overview plot of multi-view data}
 \usage{
-mv_plot(mv_data, scale = TRUE, mv = NULL, mv_names = NULL,
-  labels = NULL, include_default_caption = TRUE, ...)
+mv_plot(
+  mv_data,
+  scale = TRUE,
+  mv = NULL,
+  mv_names = NULL,
+  labels = NULL,
+  include_default_caption = TRUE,
+  ...
+)
 }
 \arguments{
 \item{mv_data}{Multi-view data, either in the form of a concatenated matrix (where the columns of the views have

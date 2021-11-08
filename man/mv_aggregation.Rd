@@ -4,8 +4,14 @@
 \alias{mv_aggregation}
 \title{Aggregation of hard or soft clusters based on multi-view data}
 \usage{
-mv_aggregation(X, mv, clustering_init, gamma = 2,
-  use_mv_weights = TRUE, verbose = TRUE)
+mv_aggregation(
+  X,
+  mv,
+  clustering_init,
+  gamma = 2,
+  use_mv_weights = TRUE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{X}{Matrix of multi-view data, where the first view corresponds to the 

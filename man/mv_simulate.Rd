@@ -4,8 +4,14 @@
 \alias{mv_simulate}
 \title{Simulate multi-view data}
 \usage{
-mv_simulate(beta = 4, n = 100, K = 7, sigma = 1.5,
-  beta_V6_multiplier = 1.5, ...)
+mv_simulate(
+  beta = 4,
+  n = 100,
+  K = 7,
+  sigma = 1.5,
+  beta_V6_multiplier = 1.5,
+  ...
+)
 }
 \arguments{
 \item{beta}{Multiplicative factor controlling the spread of values around the origin in the first (\code{beta}), 

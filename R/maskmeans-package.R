@@ -1,9 +1,10 @@
 #' Multi-view agglomeration/splitting K-means clustering algorithm
 #'
-#' Brief description of package ...
+#' This package incorporates algorithms for aggregating or splitting an 
+#' existing hard or soft classification using multi-view data.
 #'
 #' \tabular{ll}{ Package: \tab maskmeans\cr Type: \tab Package\cr Version:
-#' \tab 0.0.13\cr Date: \tab 2018-10-31\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
+#' \tab 0.0.15\cr Date: \tab 2021-11-08\cr License: \tab GPL (>=3.3.1)\cr LazyLoad:
 #' \tab yes\cr }
 #'
 #' @name maskmeans-package
@@ -13,7 +14,9 @@
 #'
 #' Maintainer: Andrea Rau <\url{andrea.rau@@inra.fr}>
 #' @references
-#' To be completed ...
+#' Godichon-Baggioni, A., Maugis-Rabusseau, C. and Rau, A. (2020) Multi-view 
+#' cluster aggregation and splitting, with an application to multi-omic breast 
+#' cancer data. Annals of Applied Statistics, 14:2, 752-767.
 #'
 #' @keywords models cluster
 #' @importFrom stats hclust cutree prcomp dist rnorm kmeans
@@ -89,6 +92,11 @@ NULL
 #' soft splitting algorithm}
 #' \item{final_probapost }{Matrix of conditional probabilities of cluster membership for
 #' each observation for the model with \code{final_K} clusters}
+#' 
+#' @references
+#' Godichon-Baggioni, A., Maugis-Rabusseau, C. and Rau, A. (2020) Multi-view 
+#' cluster aggregation and splitting, with an application to multi-omic breast 
+#' cancer data. Annals of Applied Statistics, 14:2, 752-767.
 #' 
 #' @export
 #' @example /inst/examples/maskmeans-package.R
